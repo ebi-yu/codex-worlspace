@@ -1,7 +1,7 @@
 // 1. test対象の振る舞いを、最小の入力と期待値で固定する。
 // @ts-nocheck
 import assert from "node:assert/strict";
-import test from "node:test";
+import { test } from "vitest";
 
 import { EvaluationAxes } from "../domain/evaluation-axes.js";
 import { SearchResult } from "../domain/search-result.js";

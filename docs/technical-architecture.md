@@ -457,4 +457,4 @@ testは対象実装と同じdirectoryへ`*.test.ts`として置きます。実�
 
 ## 19. CI
 
-GitHub Actionsはpull requestと`main`へのpushで`pnpm validate`を実行し、Oxfmt、Oxlint、型検査、test、Vite buildを確認します。localとCIで同じcommandを使う理由は[ADR 0004](adr/0004-test-colocation-and-ci.md)に記録します。
+GitHub Actionsはpull requestと`main`へのpushで`pnpm validate`を実行し、Oxfmt、Oxlint、型検査、Vitest、Vite buildを確認します。localとCIで同じcommandを使う理由は[ADR 0004](adr/0004-test-colocation-and-ci.md)に記録します。

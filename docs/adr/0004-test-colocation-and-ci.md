@@ -12,7 +12,7 @@
 - `search-result.ts`と`search-result.test.ts`のように、testを対象実装と同じdirectoryへ置く。
 - test fileは`*.test.ts`で識別し、Viteのruntime entryから参照しない。
 - GitHub Actionsでpull requestと`main`へのpushを検証する。
-- CIではOxfmt、Oxlint、TypeScript、Node.js test runner、Vite buildを`pnpm validate`から同じ順序で実行する。
+- CIではOxfmt、Oxlint、TypeScript、Vitest、Vite buildを`pnpm validate`から同じ順序で実行する。
 - CI権限はsourceの読み取りだけに制限し、同じbranchの古い実行はcancelする。
 
 ## 結果

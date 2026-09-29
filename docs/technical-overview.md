@@ -88,4 +88,4 @@ Chromeでの確認手順:
 
 ## 7. testとCI
 
-testは対象fileと同じdirectoryにあります。たとえば`domain/search-result.ts`のtestは`domain/search-result.test.ts`です。`pnpm test`はこれらをcompileしてNode.jsで実行します。GitHub Actionsはpull requestごとに`pnpm validate`を実行するため、format、lint、型、test、Chrome拡張buildの失敗をmerge前に確認できます。
+testは対象fileと同じdirectoryにあります。たとえば`domain/search-result.ts`のtestは`domain/search-result.test.ts`です。`pnpm test`はVitestを使い、これらのTypeScript testを直接実行します。GitHub Actionsはpull requestごとに`pnpm validate`を実行するため、format、lint、型、test、Chrome拡張buildの失敗をmerge前に確認できます。

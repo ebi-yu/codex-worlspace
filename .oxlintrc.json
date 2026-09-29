@@ -5,7 +5,6 @@
     "perf": "warn"
   },
   "ignorePatterns": [
-    "build/**",
-    "build-tests/**"
+    "build/**"
   ]
 }

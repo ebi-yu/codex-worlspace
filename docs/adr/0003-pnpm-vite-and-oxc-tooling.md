@@ -16,7 +16,7 @@
 - ViteはTypeScriptをtranspileしても型検査しないため、Viteより先に`tsc --noEmit`を実行する。
 - correctness、suspicious code、performanceの診断にOxlintを使う。
 - formatterはOxfmtへ統一し、ESLintやPrettierを並行導入しない。
-- test runnerはNode.js標準機能を維持する。現在のdomain testはViteから利益を得ないため、価値を増やさないtest frameworkは追加しない。
+- 当初はNode.js標準test runnerを維持する。後のVitest採用判断は[ADR 0005](0005-vitest-test-runner.md)へ記録する。
 
 ## 結果
 

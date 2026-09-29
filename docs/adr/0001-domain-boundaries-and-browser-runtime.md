@@ -22,7 +22,7 @@ service workerとoptions pageではブラウザー標準のJavaScript moduleを�
 
 ## 結果
 
-- domain testはNode.js標準test runnerで実行でき、外部packageを必要としない。
+- 当初のdomain testはNode.js標準test runnerで実行し、外部packageを必要としない。後のrunner変更はADR 0005へ記録する。
 - buildなしでunpacked版の`extension/`を直接読み込める。
 - DOM抽出を意図的に薄く保ち、Googleのmarkup変更時に交換できる。
 - bundlerを追加しない代わりに、content scriptのUI labelには一部重複を許容する。
