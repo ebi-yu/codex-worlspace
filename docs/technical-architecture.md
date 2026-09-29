@@ -15,6 +15,7 @@ Search Lens の Chrome Manifest V3 実装を、次の条件を満たすように
 
 ## 2. 全体構成
 
+// 1. 以下のコード例で構成とデータの流れを確認する。
 ```text
 ┌──────────────────────────────────────────────────────────┐
 │ Google search tab                                        │
@@ -45,6 +46,7 @@ Search Lens の Chrome Manifest V3 実装を、次の条件を満たすように
 
 ## 3. ディレクトリ案
 
+// 2. 以下のコード例で構成とデータの流れを確認する。
 ```text
 extension/
 ├─ manifest.json
@@ -75,6 +77,7 @@ test/
 
 最初の manifest は必要最小限にします。
 
+// 3. 以下のコード例で構成とデータの流れを確認する。
 ```json
 {
   "manifest_version": 3,
@@ -162,6 +165,7 @@ Google の class 名へ強く依存せず、検索結果候補から次を段階
 
 抽出結果は次の最小形へ正規化します。
 
+// 4. 以下のコード例で構成とデータの流れを確認する。
 ```ts
 type SearchResultCandidate = {
   resultId: string;
@@ -183,6 +187,7 @@ type SearchResultCandidate = {
 
 ## 7. スクロールとライフサイクル
 
+// 5. 以下のコード例で構成とデータの流れを確認する。
 ```text
 DOM result discovered
   → normalized and deduplicated
@@ -205,6 +210,7 @@ observer の callback 内では DOM 抽出とキュー登録だけを行い、AP
 
 メッセージは discriminated union とし、受信側で必ず検証します。
 
+// 6. 以下のコード例で構成とデータの流れを確認する。
 ```ts
 type ContentToBackgroundMessage =
   | {
@@ -239,6 +245,7 @@ API キー、Authorization header、生の TypeSafe レスポンスはメッセ�
 6. レスポンスを検証して `EvaluationViewModel` へ変換する。
 7. キャッシュへ保存し、要求元へ返す。
 
+// 7. 以下のコード例で構成とデータの流れを確認する。
 ```ts
 type EvaluationViewModel = {
   normalizedUrl: string;
@@ -277,6 +284,7 @@ type EvaluationViewModel = {
 
 adapter の公開境界は TypeSafe の wire format を漏らさない形にします。
 
+// 8. 以下のコード例で構成とデータの流れを確認する。
 ```ts
 interface EvaluationProvider {
   evaluate(
@@ -301,6 +309,7 @@ adapter 内で行うこと：
 
 `chrome.storage.local` のキーを用途別に分けます。
 
+// 9. 以下のコード例で構成とデータの流れを確認する。
 ```ts
 type StoredSettings = {
   schemaVersion: 1;
@@ -328,6 +337,7 @@ type StoredSecrets = {
 
 service worker の初期化時に storage の access level を trusted context へ制限し、content script から `chrome.storage.local` を直接読めないようにします。
 
+// 10. 以下のコード例で構成とデータの流れを確認する。
 ```ts
 await chrome.storage.local.setAccessLevel({
   accessLevel: "TRUSTED_CONTEXTS",
@@ -340,6 +350,7 @@ content script が必要とする非機密設定は、検証済みの `GET_EXTEN
 
 キャッシュキー：
 
+// 11. 以下のコード例で構成とデータの流れを確認する。
 ```text
 sha256(query + normalizedUrl + locale + axisSetVersion + sortedEnabledAxisIds)
 ```

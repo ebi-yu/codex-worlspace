@@ -4,11 +4,7 @@ import { defineConfig } from "vite";
 
 const root = resolve(import.meta.dirname);
 
-/**
- * Chrome loads the manifest and options assets by fixed paths. Keeping this
- * explicit avoids a general-purpose copy dependency and makes the package
- * boundary reviewable in one place.
- */
+// 1. Chromeが固定pathで読む静的assetを、追加dependencyなしで明示的にcopyする。
 function copyExtensionAssets() {
   return {
     name: "copy-extension-assets",
@@ -25,6 +21,7 @@ function copyExtensionAssets() {
   };
 }
 
+// 2. 3つのruntime entryをmanifestと一致するpathへbuildする。
 export default defineConfig({
   build: {
     outDir: "build/extension",

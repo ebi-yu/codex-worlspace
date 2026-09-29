@@ -1,29 +1,29 @@
-# ADR 0001: Value objects and browser-native runtime
+# ADR 0001: Value Objectとブラウザー標準ランタイム
 
-- Status: Superseded by [ADR 0002](0002-typescript-build-boundary.md)
-- Date: 2026-09-29
+- 状態: [ADR 0002](0002-typescript-build-boundary.md)により置き換え
+- 日付: 2026-09-29
 
-## Context
+## 背景
 
-Search Lens needs a small Chrome Manifest V3 implementation. The business rules that create value are not the DOM selectors themselves, but deciding what a valid search result is, which axes are enabled, which questions are sent, and how provider answers become honest UI values.
+Search Lensには、小規模なChrome Manifest V3実装が必要です。価値を生むビジネスルールはDOM selectorそのものではなく、有効な検索結果とは何か、どの評価軸を有効にするか、どの質問を送るか、providerの回答を誤解のないUI値へどう変換するかです。
 
-The repository does not yet need a framework, dependency injection container, repository hierarchy, or build pipeline. Adding them before the first vertical slice would make extension loading and review harder.
+最初の縦切りを作る前からframework、DI container、repository階層、build pipelineを導入すると、拡張の読み込みとreviewが難しくなります。
 
-## Decision
+## 決定
 
-Use a lightweight DDD approach with four domain boundaries:
+次の4つのdomain境界に限定した軽量DDDを採用します。
 
-- `SearchResult`: validates and normalizes one result and owns its identity.
-- `EvaluationAxes`: validates, orders, and identifies the chosen evaluation axes.
-- `buildQuestions`: maps selected axes to the TypeSafe contract.
-- `Evaluation`: validates provider answers and converts them to display-safe values.
+- `SearchResult`: 1件の検索結果を検証・正規化し、identityを管理する。
+- `EvaluationAxes`: 選択された評価軸を検証・整列し、組み合わせを識別する。
+- `buildQuestions`: 選択された評価軸をTypeSafe API contractへ変換する。
+- `Evaluation`: providerの回答を検証し、安全に表示できる値へ変換する。
 
-Use browser-native JavaScript modules in the service worker and options page. Keep the content script dependency-free because Chrome content scripts are not declared as ES modules without a bundling step. Inject `fetch`, `sleep`, and randomness only at the TypeSafe client boundary where deterministic tests provide real value.
+service workerとoptions pageではブラウザー標準のJavaScript moduleを使います。Chromeのcontent scriptはbundlingなしではES moduleとして宣言できないため、依存を持たせません。決定的なtestに価値があるTypeSafe client境界に限って、`fetch`、`sleep`、乱数生成を注入します。
 
-## Consequences
+## 結果
 
-- Domain tests run with Node's built-in test runner and require no third-party packages.
-- The unpacked `extension/` directory is directly loadable without a build step.
-- DOM extraction remains deliberately thin and can be replaced when Google markup changes.
-- We accept some duplication in the content script UI labels to avoid adding a bundler now.
-- If the UI grows, a later ADR may introduce a build tool, but only after the browser-native version exposes a concrete need.
+- domain testはNode.js標準test runnerで実行でき、外部packageを必要としない。
+- buildなしでunpacked版の`extension/`を直接読み込める。
+- DOM抽出を意図的に薄く保ち、Googleのmarkup変更時に交換できる。
+- bundlerを追加しない代わりに、content scriptのUI labelには一部重複を許容する。
+- UIが成長した場合は、具体的な必要性を確認してから別のADRでbuild toolを検討する。

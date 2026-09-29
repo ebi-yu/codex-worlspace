@@ -1,4 +1,5 @@
-// @ts-nocheck -- browser/provider boundary is runtime-validated; see ADR 0002.
+// 1. browser／provider境界はruntimeで検証する。詳細はADR 0002を参照。
+// @ts-nocheck
 const SCORE = Object.freeze({
   usefulness: {
     instructions:
@@ -77,6 +78,7 @@ const CHOICE = Object.freeze({
   },
 });
 
+// 2. toggleで有効な軸だけをTypeSafeのquestionへ変換する。
 export function buildQuestions(axes) {
   return Object.fromEntries(
     axes.ids.map((id) => {

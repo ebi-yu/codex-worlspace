@@ -1,9 +1,11 @@
+// 1. このfileの責務を型とtestで明示する。
 export type SupportedLocale = "en" | "ja";
 export interface SearchResultInput { query?: unknown; url?: unknown; title?: unknown; snippet?: unknown; locale?: unknown; }
 export interface SearchResultValue { query: string; url: string; title: string; snippet: string; locale: SupportedLocale; }
 const SUPPORTED_LOCALES = new Set<unknown>(["en", "ja"]);
 const TRACKING_PARAMETERS = ["utm_campaign", "utm_content", "utm_medium", "utm_source", "utm_term", "gclid"];
 
+// 2. 外部入力を検証してから、変更不能な検索結果として保持する。
 export class SearchResult {
   readonly value: Readonly<SearchResultValue>;
   static create(input: SearchResultInput | null | undefined): SearchResult {
@@ -18,6 +20,7 @@ export class SearchResult {
   toJSON(): SearchResultValue { return { ...this.value }; }
 }
 function cleanText(value: unknown): string { return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : ""; }
+// 3. 内容に影響しないtracking情報だけをidentityから除外する。
 function normalizeUrl(value: unknown): string {
   let url: URL; try { url = new URL(typeof value === "string" ? value : ""); } catch { throw new TypeError("url must be a valid HTTP URL"); }
   if (url.protocol !== "https:" && url.protocol !== "http:") throw new TypeError("url must be a valid HTTP URL");

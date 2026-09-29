@@ -1,9 +1,11 @@
-// @ts-nocheck -- browser/provider boundary is runtime-validated; see ADR 0002.
+// 1. browser／provider境界はruntimeで検証する。詳細はADR 0002を参照。
+// @ts-nocheck
 import { Evaluation } from "../domain/evaluation.js";
 import { buildQuestions } from "../domain/questions.js";
 
 const ENDPOINT = "https://api.typesafe.ai/v1/systemone";
 
+// 2. 外部errorをUIへ安全に渡せるcodeへ限定する。
 export class ProviderError extends Error {
   constructor(code) {
     super(`TypeSafe request failed: ${code}`);
@@ -12,6 +14,7 @@ export class ProviderError extends Error {
   }
 }
 
+// 3. 有効な評価軸だけを送り、一時errorだけを指数backoffで再試行する。
 export class TypeSafeClient {
   constructor({
     fetch = globalThis.fetch,
@@ -66,6 +69,7 @@ export class TypeSafeClient {
   }
 }
 
+// 4. JSONでないresponseをdomainへ渡さない。
 async function safeJson(response) {
   try {
     return await response.json();

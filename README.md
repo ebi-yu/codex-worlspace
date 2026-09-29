@@ -32,6 +32,7 @@ Google 検索結果を見ながら、各ページが「いまの調査目的に�
 
 必要なものは Node.js 20 以降と Google Chrome です。TypeScript ソースは、Chrome が実行できる JavaScript へビルドします。
 
+// 1. 以下のコード例で構成とデータの流れを確認する。
 ```sh
 pnpm install
 pnpm test

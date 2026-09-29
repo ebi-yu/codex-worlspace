@@ -19,6 +19,7 @@
 
 Googleページ内のcontent scriptからtokenへアクセスできる設計は、ページとの境界を誤ったときの漏えいリスクを大きくします。そのため、画面を読む役、秘密を扱う役、設定する役を分離します。
 
+// 1. 以下のコード例で構成とデータの流れを確認する。
 ```text
 Google検索ページ
   └─ content script ── 評価依頼（tokenなし）──▶ service worker
@@ -35,6 +36,7 @@ options page ── token・トグルを保存 ──▶ chrome.storage.local
 
 編集するのは `extension/src/**/*.ts` です。`pnpm build` はTypeScriptを型検査し、Viteで `build/extension/` を作ります。`build/` は生成物なのでGitへコミットせず、Chromeにはこの生成済みフォルダを読み込ませます。
 
+// 2. 以下のコード例で構成とデータの流れを確認する。
 ```sh
 pnpm install
 pnpm test         # 価値あるドメイン/API契約テストを実行

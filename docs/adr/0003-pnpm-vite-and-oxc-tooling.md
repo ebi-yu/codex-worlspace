@@ -1,27 +1,27 @@
-# ADR 0003: pnpm, Vite, and Oxc developer tooling
+# ADR 0003: pnpm、Vite、Oxcによる開発tool構成
 
-- Status: Accepted
-- Date: 2026-09-29
+- 状態: 採用
+- 日付: 2026-09-29
 
-## Context
+## 背景
 
-The first TypeScript build used shell commands around `tsc`. That proved the extension could be compiled, but it made packaging static assets an implicit part of an npm script and offered no lint or formatting feedback. The repository also needs one documented package-manager workflow so contributors do not create competing lockfiles.
+最初のTypeScript buildでは、`tsc`をshell commandで組み合わせました。拡張をcompileできることは確認できましたが、静的assetのpackage化がnpm scriptへ暗黙的に埋め込まれ、lintとformatのfeedbackもありませんでした。また、複数のlockfileを作らないよう、repositoryで使うpackage managerを1つに決める必要があります。
 
-## Decision
+## 決定
 
-- Use pnpm 10 as the only package manager and declare the expected version in `packageManager`.
-- Use Vite in library-style multi-entry mode for the service worker, content script, and options page.
-- Keep the three Chrome entry filenames stable because `manifest.json` and `options.html` are runtime contracts.
-- Copy the three static assets with a small local Vite plugin rather than adding a general copy plugin.
-- Run `tsc --noEmit` before Vite because Vite transpiles TypeScript but does not type-check it.
-- Use Oxlint for correctness, suspicious-code, and performance diagnostics.
-- Use Oxfmt as the sole formatter. Do not add ESLint or Prettier in parallel.
-- Keep Node's test runner. Vite does not improve the current domain tests, so adding a test framework would be tooling without product value.
+- package managerをpnpm 10へ統一し、`packageManager`に想定versionを宣言する。
+- service worker、content script、options pageをentryとするViteのmulti-entry buildを使う。
+- `manifest.json`と`options.html`が参照する3つのentry filenameはruntime contractとして固定する。
+- 汎用copy pluginを増やさず、小さなlocal Vite pluginで3つの静的assetをcopyする。
+- ViteはTypeScriptをtranspileしても型検査しないため、Viteより先に`tsc --noEmit`を実行する。
+- correctness、suspicious code、performanceの診断にOxlintを使う。
+- formatterはOxfmtへ統一し、ESLintやPrettierを並行導入しない。
+- test runnerはNode.js標準機能を維持する。現在のdomain testはViteから利益を得ないため、価値を増やさないtest frameworkは追加しない。
 
-## Consequences
+## 結果
 
-- Contributors use `pnpm install`, `pnpm test`, `pnpm build`, and `pnpm validate`.
-- Chrome still loads `build/extension/`; the runtime package layout is unchanged.
-- Vite may extract shared domain code into `src/shared/`, reducing duplicate output across extension entry points.
-- The build configuration owns the explicit list of copied files. Adding another static runtime asset requires updating `vite.config.mjs`.
-- A build failure in an environment that cannot reach the package registry must be reported as an environment limitation; generated output must not be committed as a workaround.
+- contributorは`pnpm install`、`pnpm test`、`pnpm build`、`pnpm validate`を使う。
+- Chromeが読み込む場所は引き続き`build/extension/`とし、runtime packageの配置は変えない。
+- Viteは共有domain codeを`src/shared/`へ抽出でき、複数entry間の重複出力を減らせる。
+- build configがcopy対象の明示的な一覧を管理する。静的runtime assetを増やす場合は`vite.config.mjs`も更新する。
+- package registryへ接続できない環境でのbuild失敗は環境制約として報告し、回避策として生成物をcommitしない。

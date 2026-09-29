@@ -1,4 +1,6 @@
-// @ts-nocheck -- browser/provider boundary is runtime-validated; see ADR 0002.
+// 1. browser／provider境界はruntimeで検証する。詳細はADR 0002を参照。
+// @ts-nocheck
+// 2. provider responseを検証し、誤解のない表示用valueへ変換する。
 export class Evaluation {
   static fromTypeSafe(payload) {
     if (!payload || typeof payload.model !== "string" || !isObject(payload.answers)) {
@@ -25,6 +27,7 @@ export class Evaluation {
   }
 }
 
+// 3. question typeごとに必要なfieldと範囲をruntimeで検証する。
 function parseAnswer(id, answer) {
   if (!isObject(answer)) throw new TypeError(`invalid answer: ${id}`);
   if (answer.type === "score") return parseScore(id, answer);

@@ -1,4 +1,5 @@
-// @ts-nocheck -- browser/provider boundary is runtime-validated; see ADR 0002.
+// 1. browser／provider境界はruntimeで検証する。詳細はADR 0002を参照。
+// @ts-nocheck
 import { AXIS_IDS, EvaluationAxes } from "../domain/evaluation-axes.js";
 
 const AXIS_COPY = {
@@ -20,6 +21,7 @@ const tokenInput = document.querySelector("#api-key");
 const tokenState = document.querySelector("#token-state");
 const notice = document.querySelector("#notice");
 
+// 2. domainが許可した評価軸だけをtoggleとして描画する。
 for (const id of AXIS_IDS) {
   const label = document.createElement("label");
   label.className = "axis";
@@ -38,6 +40,7 @@ for (const id of AXIS_IDS) {
 
 await load();
 
+// 3. tokenは再表示せず、設定変更時は古い評価cacheを破棄する。
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   const enabledAxes = selectedAxes();

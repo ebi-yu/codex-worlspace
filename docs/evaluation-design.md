@@ -39,6 +39,7 @@ Search Lens はサイトへ恒久的な点数を付けるのではなく、現�
 
 ### `usefulness` — 初期オン
 
+// 1. 以下のコード例で構成とデータの流れを確認する。
 ```json
 {
   "type": "score",
@@ -55,6 +56,7 @@ Search Lens はサイトへ恒久的な点数を付けるのではなく、現�
 
 ### `prerequisite_level` — 初期オンの面白軸
 
+// 2. 以下のコード例で構成とデータの流れを確認する。
 ```json
 {
   "type": "choice",
@@ -72,6 +74,7 @@ Search Lens はサイトへ恒久的な点数を付けるのではなく、現�
 
 ### `source_type` — 初期オン
 
+// 3. 以下のコード例で構成とデータの流れを確認する。
 ```json
 {
   "type": "choice",
@@ -105,6 +108,7 @@ Search Lens はサイトへ恒久的な点数を付けるのではなく、現�
 
 設定画面に「評価軸」セクションを置きます。
 
+// 4. 以下のコード例で構成とデータの流れを確認する。
 ```text
 評価軸
   推定有用度       ON
@@ -140,6 +144,7 @@ Search Lens はサイトへ恒久的な点数を付けるのではなく、現�
 
 ### 入力 state
 
+// 5. 以下のコード例で構成とデータの流れを確認する。
 ```json
 {
   "query": "chrome extension manifest v3 service worker",
@@ -153,6 +158,7 @@ Search Lens はサイトへ恒久的な点数を付けるのではなく、現�
 
 ### questions の動的生成
 
+// 6. 以下のコード例で構成とデータの流れを確認する。
 ```ts
 const questionFactories = {
   usefulness: () => ({
@@ -204,6 +210,7 @@ const questions = Object.fromEntries(
 
 ### HTTP リクエスト
 
+// 7. 以下のコード例で構成とデータの流れを確認する。
 ```ts
 const response = await fetch("https://api.typesafe.ai/v1/systemone", {
   method: "POST",
@@ -238,6 +245,7 @@ const response = await fetch("https://api.typesafe.ai/v1/systemone", {
 
 ## 8. キャッシュとバージョン
 
+// 8. 以下のコード例で構成とデータの流れを確認する。
 ```text
 sha256(query + normalizedUrl + locale + axisSetVersion + sortedEnabledAxisIds)
 ```

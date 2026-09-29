@@ -1,4 +1,5 @@
-// @ts-nocheck -- browser/provider boundary is runtime-validated; see ADR 0002.
+// 1. browser／provider境界はruntimeで検証する。詳細はADR 0002を参照。
+// @ts-nocheck
 import { EvaluationAxes } from "../domain/evaluation-axes.js";
 import { SearchResult } from "../domain/search-result.js";
 import { ProviderError, TypeSafeClient } from "../infrastructure/typesafe-client.js";
@@ -11,6 +12,7 @@ const CACHE_TTL = 24 * 60 * 60 * 1000;
 const pending = new Map();
 const client = new TypeSafeClient();
 
+// 2. 起動直後に秘密情報をcontent scriptから読めない範囲へ制限する。
 void restrictStorage();
 
 chrome.runtime.onInstalled.addListener(async () => {
@@ -22,6 +24,7 @@ chrome.runtime.onInstalled.addListener(async () => {
 
 chrome.action.onClicked.addListener(() => chrome.runtime.openOptionsPage());
 
+// 3. messageを検証し、cacheとin-flight requestを共有してAPI呼び出しを抑える。
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type !== "EVALUATE_RESULT") return false;
   evaluateMessage(message.payload)
@@ -58,6 +61,7 @@ async function evaluateMessage(payload) {
   return pending.get(cacheKey);
 }
 
+// 4. cacheは期限と件数を制限し、公開errorはtokenやprovider本文を含めない。
 async function restrictStorage() {
   await chrome.storage.local.setAccessLevel({ accessLevel: "TRUSTED_CONTEXTS" });
 }

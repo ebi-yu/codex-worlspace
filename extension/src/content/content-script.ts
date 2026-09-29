@@ -1,9 +1,11 @@
-// @ts-nocheck -- browser/provider boundary is runtime-validated; see ADR 0002.
+// 1. browser／provider境界はruntimeで検証する。詳細はADR 0002を参照。
+// @ts-nocheck
 (() => {
   const observed = new WeakSet();
   let query = readQuery();
   let debounce;
 
+  // 2. viewportへ近づいた検索結果だけを評価し、API利用量を抑える。
   const intersection = new IntersectionObserver(onIntersection, { rootMargin: "150% 0px" });
   const mutations = new MutationObserver(() => {
     clearTimeout(debounce);
@@ -34,6 +36,7 @@
     }
   }
 
+  // 3. tokenを含めず、検索結果metadataだけをservice workerへ渡す。
   async function evaluate(anchor) {
     const card = anchor.closest("div.MjjYud") ?? anchor.parentElement;
     const snippet = card?.querySelector("[data-sncf], .VwiC3b")?.textContent ?? "";
@@ -59,6 +62,7 @@
     }
   }
 
+  // 4. Shadow DOMでGoogle側のstyleと評価UIを分離する。
   function createHost() {
     const host = document.createElement("div");
     host.dataset.searchLens = "";

@@ -1,3 +1,4 @@
+// 1. このfileの責務を型とtestで明示する。
 export const AXIS_IDS = [
   "usefulness", "prerequisite_level", "source_type", "primary_source", "specificity",
   "freshness", "transparency", "audience", "reading_effort", "commercial_intent",
@@ -10,6 +11,7 @@ const PRESETS = {
   research: ["usefulness", "source_type", "primary_source", "specificity", "freshness", "transparency"],
 } as const satisfies Record<string, readonly AxisId[]>;
 
+// 2. 軸の重複と順序を正規化し、同じ設定から同じcache keyを作る。
 export class EvaluationAxes {
   readonly ids: readonly AxisId[];
   static defaults(): EvaluationAxes { return EvaluationAxes.create(PRESETS.learning); }
