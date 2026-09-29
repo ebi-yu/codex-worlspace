@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "Bundler",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "WebWorker"
+    ],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "rootDir": ".",
+    "outDir": "build",
+    "types": [
+      "chrome",
+      "node"
+    ],
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "noEmit": true
+  },
+  "include": [
+    "extension/src/**/*.ts"
+  ]
+}
