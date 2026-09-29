@@ -4,16 +4,19 @@ import assert from "node:assert/strict";
 import { test } from "vitest";
 
 import { EvaluationAxes } from "./evaluation-axes.js";
-import { buildQuestions } from "./questions.js";
+import { convertEvaluationAxesToTypeSafeQuestions } from "./questions.js";
 
-test("buildQuestions sends exactly the axes the user enabled", () => {
-  const questions = buildQuestions(
-    EvaluationAxes.create(["usefulness", "prerequisite_level"]),
+test("convertEvaluationAxesToTypeSafeQuestions sends exactly the axes the user enabled", () => {
+  const typeSafeQuestions = convertEvaluationAxesToTypeSafeQuestions(
+    EvaluationAxes.fromUntrustedIds(["usefulness", "prerequisite_level"]),
   );
 
-  assert.deepEqual(Object.keys(questions), ["usefulness", "prerequisite_level"]);
-  assert.equal(questions.usefulness.type, "score");
-  assert.equal(questions.usefulness.criteria.length, 5);
-  assert.equal(questions.prerequisite_level.type, "choice");
-  assert.ok("unknown" in questions.prerequisite_level.criteria);
+  assert.deepEqual(Object.keys(typeSafeQuestions), [
+    "usefulness",
+    "prerequisite_level",
+  ]);
+  assert.equal(typeSafeQuestions.usefulness.type, "score");
+  assert.equal(typeSafeQuestions.usefulness.criteria.length, 5);
+  assert.equal(typeSafeQuestions.prerequisite_level.type, "choice");
+  assert.ok("unknown" in typeSafeQuestions.prerequisite_level.criteria);
 });

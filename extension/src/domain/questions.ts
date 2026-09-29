@@ -1,6 +1,6 @@
 // 1. browser／provider境界はruntimeで検証する。詳細はADR 0002を参照。
 // @ts-nocheck
-const SCORE = Object.freeze({
+const SCORE_QUESTION_DEFINITIONS = Object.freeze({
   usefulness: {
     instructions:
       "How useful is `result` for answering `query`, based only on the supplied search-result metadata?",
@@ -19,19 +19,31 @@ const SCORE = Object.freeze({
   freshness: {
     instructions:
       "How likely is `result` to be current enough for `query`? Use the lowest level when metadata is insufficient.",
-    criteria: ["Unknown", "Possibly outdated", "Probably current", "Clearly current"],
+    criteria: [
+      "Unknown",
+      "Possibly outdated",
+      "Probably current",
+      "Clearly current",
+    ],
   },
   transparency: {
-    instructions: "How transparent does `result` appear about authorship and sources?",
+    instructions:
+      "How transparent does `result` appear about authorship and sources?",
     criteria: ["Unknown", "Limited", "Adequate", "Highly transparent"],
   },
   commercial_intent: {
-    instructions: "How strongly is `result` focused on purchase or registration?",
-    criteria: ["Informational", "Some commercial intent", "Mostly commercial", "Strongly commercial"],
+    instructions:
+      "How strongly is `result` focused on purchase or registration?",
+    criteria: [
+      "Informational",
+      "Some commercial intent",
+      "Mostly commercial",
+      "Strongly commercial",
+    ],
   },
 });
 
-const CHOICE = Object.freeze({
+const CHOICE_QUESTION_DEFINITIONS = Object.freeze({
   prerequisite_level: {
     instructions:
       "What level of prior knowledge would a reader likely need to use `result`?",
@@ -79,17 +91,32 @@ const CHOICE = Object.freeze({
 });
 
 // 2. toggleで有効な軸だけをTypeSafeのquestionへ変換する。
-export function buildQuestions(axes) {
+export function convertEvaluationAxesToTypeSafeQuestions(evaluationAxes) {
   return Object.fromEntries(
-    axes.ids.map((id) => {
-      if (SCORE[id]) return [id, { type: "score", ...structuredClone(SCORE[id]) }];
-      if (CHOICE[id]) return [id, { type: "choice", ...structuredClone(CHOICE[id]) }];
-      if (id === "primary_source") {
+    evaluationAxes.enabledAxisIds.map((axisId) => {
+      if (SCORE_QUESTION_DEFINITIONS[axisId])
         return [
-          id,
+          axisId,
+          {
+            type: "score",
+            ...structuredClone(SCORE_QUESTION_DEFINITIONS[axisId]),
+          },
+        ];
+      if (CHOICE_QUESTION_DEFINITIONS[axisId])
+        return [
+          axisId,
+          {
+            type: "choice",
+            ...structuredClone(CHOICE_QUESTION_DEFINITIONS[axisId]),
+          },
+        ];
+      if (axisId === "primary_source") {
+        return [
+          axisId,
           {
             type: "noul",
-            instructions: "Is `result` likely to be an official or primary source?",
+            instructions:
+              "Is `result` likely to be an official or primary source?",
             criteria: {
               true: "Official, original, or first-party information",
               false: "Secondary, derivative, or unknown information",
@@ -97,7 +124,7 @@ export function buildQuestions(axes) {
           },
         ];
       }
-      throw new TypeError(`question is not defined for axis: ${id}`);
+      throw new TypeError(`question is not defined for axis: ${axisId}`);
     }),
   );
 }

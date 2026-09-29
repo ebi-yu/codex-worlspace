@@ -6,7 +6,7 @@ import { test } from "vitest";
 import { SearchResult } from "./search-result.js";
 
 test("SearchResult normalizes identity without discarding meaningful query parameters", () => {
-  const result = SearchResult.create({
+  const searchResult = SearchResult.fromUntrustedInput({
     query: "  manifest v3 service worker  ",
     url: "https://Example.com/docs/?utm_source=google&page=2#install",
     title: "  Extension docs  ",
@@ -14,20 +14,23 @@ test("SearchResult normalizes identity without discarding meaningful query param
     locale: "en",
   });
 
-  assert.deepEqual(result.toJSON(), {
+  assert.deepEqual(searchResult.toSerializableMetadata(), {
     query: "manifest v3 service worker",
     url: "https://example.com/docs?page=2",
     title: "Extension docs",
     snippet: "A useful guide.",
     locale: "en",
   });
-  assert.equal(result.identity, "manifest v3 service worker\nhttps://example.com/docs?page=2");
+  assert.equal(
+    searchResult.cacheIdentity,
+    "manifest v3 service worker\nhttps://example.com/docs?page=2",
+  );
 });
 
 test("SearchResult rejects data that cannot create a meaningful evaluation", () => {
   assert.throws(
     () =>
-      SearchResult.create({
+      SearchResult.fromUntrustedInput({
         query: "",
         url: "javascript:alert(1)",
         title: "",

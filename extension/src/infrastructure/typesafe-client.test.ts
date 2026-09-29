@@ -5,12 +5,9 @@ import { test } from "vitest";
 
 import { EvaluationAxes } from "../domain/evaluation-axes.js";
 import { SearchResult } from "../domain/search-result.js";
-import {
-  ProviderError,
-  TypeSafeClient,
-} from "./typesafe-client.js";
+import { ProviderError, TypeSafeClient } from "./typesafe-client.js";
 
-const result = SearchResult.create({
+const searchResult = SearchResult.fromUntrustedInput({
   query: "manifest v3",
   url: "https://developer.chrome.com/docs/extensions",
   title: "Chrome Extensions",
@@ -19,11 +16,11 @@ const result = SearchResult.create({
 });
 
 test("TypeSafeClient sends the user's key and only enabled questions", async () => {
-  const calls = [];
-  const client = new TypeSafeClient({
-    fetch: async (url, init) => {
-      calls.push({ url, init });
-      return jsonResponse({
+  const recordedHttpRequests = [];
+  const typeSafeClient = new TypeSafeClient({
+    performHttpRequest: async (requestUrl, requestInit) => {
+      recordedHttpRequests.push({ requestUrl, requestInit });
+      return createJsonResponse({
         model: "jev-1.13.0",
         answers: {
           usefulness: {
@@ -39,68 +36,86 @@ test("TypeSafeClient sends the user's key and only enabled questions", async () 
     },
   });
 
-  const evaluation = await client.evaluate({
+  const evaluation = await typeSafeClient.requestSearchResultEvaluation({
     apiKey: "user-secret",
-    result,
-    axes: EvaluationAxes.create(["usefulness"]),
+    searchResult,
+    evaluationAxes: EvaluationAxes.fromUntrustedIds(["usefulness"]),
   });
 
-  assert.equal(calls.length, 1);
-  assert.equal(calls[0].url, "https://api.typesafe.ai/v1/systemone");
-  assert.equal(calls[0].init.headers.Authorization, "Bearer user-secret");
-  const body = JSON.parse(calls[0].init.body);
-  assert.equal(body.model, "jev-latest");
-  assert.deepEqual(Object.keys(body.questions), ["usefulness"]);
-  assert.equal(body.state.result.title, "Chrome Extensions");
-  assert.equal(evaluation.toViewModel().axes[0].value, 100);
+  assert.equal(recordedHttpRequests.length, 1);
+  assert.equal(
+    recordedHttpRequests[0].requestUrl,
+    "https://api.typesafe.ai/v1/systemone",
+  );
+  assert.equal(
+    recordedHttpRequests[0].requestInit.headers.Authorization,
+    "Bearer user-secret",
+  );
+  const requestBody = JSON.parse(recordedHttpRequests[0].requestInit.body);
+  assert.equal(requestBody.model, "jev-latest");
+  assert.deepEqual(Object.keys(requestBody.questions), ["usefulness"]);
+  assert.equal(requestBody.state.result.title, "Chrome Extensions");
+  assert.equal(
+    evaluation.toDisplayModel().axisEvaluations[0].displayValue,
+    100,
+  );
 });
 
 test("TypeSafeClient retries overload once without leaking provider text", async () => {
-  let attempts = 0;
-  const delays = [];
-  const client = new TypeSafeClient({
-    fetch: async () => {
-      attempts += 1;
-      if (attempts === 1) return jsonResponse({ error: "internal details" }, 529);
-      return jsonResponse({ model: "jev", answers: {}, usage: { input_tokens: 1, output_tokens: 1 } });
+  let httpRequestCount = 0;
+  const recordedRetryDelays = [];
+  const typeSafeClient = new TypeSafeClient({
+    performHttpRequest: async () => {
+      httpRequestCount += 1;
+      if (httpRequestCount === 1)
+        return createJsonResponse({ error: "internal details" }, 529);
+      return createJsonResponse({
+        model: "jev",
+        answers: {},
+        usage: { input_tokens: 1, output_tokens: 1 },
+      });
     },
-    sleep: async (milliseconds) => delays.push(milliseconds),
-    random: () => 0,
+    waitBeforeRetry: async (retryDelayMilliseconds) =>
+      recordedRetryDelays.push(retryDelayMilliseconds),
+    generateRandomFraction: () => 0,
   });
 
-  await client.evaluate({
+  await typeSafeClient.requestSearchResultEvaluation({
     apiKey: "secret",
-    result,
-    axes: EvaluationAxes.create(["usefulness"]),
+    searchResult,
+    evaluationAxes: EvaluationAxes.fromUntrustedIds(["usefulness"]),
   });
 
-  assert.equal(attempts, 2);
-  assert.deepEqual(delays, [1000]);
+  assert.equal(httpRequestCount, 2);
+  assert.deepEqual(recordedRetryDelays, [1000]);
 });
 
 test("TypeSafeClient classifies invalid credentials without retry", async () => {
-  let attempts = 0;
-  const client = new TypeSafeClient({
-    fetch: async () => {
-      attempts += 1;
-      return jsonResponse({ error: "bad key user-secret" }, 401);
+  let httpRequestCount = 0;
+  const typeSafeClient = new TypeSafeClient({
+    performHttpRequest: async () => {
+      httpRequestCount += 1;
+      return createJsonResponse({ error: "bad key user-secret" }, 401);
     },
   });
 
   await assert.rejects(
-    client.evaluate({
+    typeSafeClient.requestSearchResultEvaluation({
       apiKey: "user-secret",
-      result,
-      axes: EvaluationAxes.create(["usefulness"]),
+      searchResult,
+      evaluationAxes: EvaluationAxes.fromUntrustedIds(["usefulness"]),
     }),
-    (error) => error instanceof ProviderError && error.code === "invalid_token" && !error.message.includes("user-secret"),
+    (error) =>
+      error instanceof ProviderError &&
+      error.publicErrorCode === "invalid_token" &&
+      !error.message.includes("user-secret"),
   );
-  assert.equal(attempts, 1);
+  assert.equal(httpRequestCount, 1);
 });
 
-function jsonResponse(body, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
+function createJsonResponse(responseBody, httpStatus = 200) {
+  return new Response(JSON.stringify(responseBody), {
+    status: httpStatus,
     headers: { "Content-Type": "application/json" },
   });
 }

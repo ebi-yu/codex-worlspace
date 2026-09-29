@@ -250,13 +250,13 @@ API キー、Authorization header、生の TypeSafe レスポンスはメッセ�
 type EvaluationViewModel = {
   normalizedUrl: string;
   evaluatedAt: string;
-  axes: Array<{
-    id: string;
-    labelKey: string;
-    value: number | string;
+  axisEvaluations: Array<{
+    axisId: string;
+    rubricLabelKey: string;
+    displayValue: number | string;
     confidence?: number;
-    distribution?: Record<string, number>;
-    status: "evaluated" | "unknown";
+    probabilityDistribution?: Record<string, number>;
+    evaluationStatus: "evaluated" | "unknown";
   }>;
 };
 ```

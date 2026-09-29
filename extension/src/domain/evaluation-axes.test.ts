@@ -6,21 +6,38 @@ import { test } from "vitest";
 import { EvaluationAxes } from "./evaluation-axes.js";
 
 test("EvaluationAxes starts with the small high-value learning set", () => {
-  const axes = EvaluationAxes.defaults();
+  const evaluationAxes = EvaluationAxes.learningPreset();
 
-  assert.deepEqual(axes.ids, ["usefulness", "prerequisite_level", "source_type"]);
-  assert.equal(axes.preset, "learning");
+  assert.deepEqual(evaluationAxes.enabledAxisIds, [
+    "usefulness",
+    "prerequisite_level",
+    "source_type",
+  ]);
+  assert.equal(evaluationAxes.matchedPresetName, "learning");
 });
 
 test("EvaluationAxes canonicalizes toggles for stable cache and request behavior", () => {
-  const axes = EvaluationAxes.create(["source_type", "usefulness", "source_type"]);
+  const evaluationAxes = EvaluationAxes.fromUntrustedIds([
+    "source_type",
+    "usefulness",
+    "source_type",
+  ]);
 
-  assert.deepEqual(axes.ids, ["usefulness", "source_type"]);
-  assert.equal(axes.cacheFragment, "usefulness,source_type");
-  assert.equal(axes.preset, "simple");
+  assert.deepEqual(evaluationAxes.enabledAxisIds, [
+    "usefulness",
+    "source_type",
+  ]);
+  assert.equal(evaluationAxes.cacheKeySegment, "usefulness,source_type");
+  assert.equal(evaluationAxes.matchedPresetName, "simple");
 });
 
 test("EvaluationAxes rejects unknown axes and an empty selection", () => {
-  assert.throws(() => EvaluationAxes.create([]), /at least one evaluation axis/);
-  assert.throws(() => EvaluationAxes.create(["magic"]), /unknown evaluation axis/);
+  assert.throws(
+    () => EvaluationAxes.fromUntrustedIds([]),
+    /at least one evaluation axis/,
+  );
+  assert.throws(
+    () => EvaluationAxes.fromUntrustedIds(["magic"]),
+    /unknown evaluation axis/,
+  );
 });

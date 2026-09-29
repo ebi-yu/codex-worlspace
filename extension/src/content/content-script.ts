@@ -1,74 +1,98 @@
-// 1. browser／provider境界はruntimeで検証する。詳細はADR 0002を参照。
+// 1. Google検索DOMとextension messageの境界はruntimeで検証する。詳細はADR 0002を参照。
 // @ts-nocheck
 (() => {
-  const observed = new WeakSet();
-  let query = readQuery();
-  let debounce;
+  const observedSearchResultLinks = new WeakSet();
+  let currentSearchQuery = readSearchQueryFromCurrentUrl();
+  let scheduledScanTimeoutId;
 
   // 2. viewportへ近づいた検索結果だけを評価し、API利用量を抑える。
-  const intersection = new IntersectionObserver(onIntersection, { rootMargin: "150% 0px" });
-  const mutations = new MutationObserver(() => {
-    clearTimeout(debounce);
-    debounce = setTimeout(scan, 350);
+  const viewportProximityObserver = new IntersectionObserver(
+    handleViewportIntersections,
+    {
+      rootMargin: "150% 0px",
+    },
+  );
+  const searchDomMutationObserver = new MutationObserver(() => {
+    clearTimeout(scheduledScanTimeoutId);
+    scheduledScanTimeoutId = setTimeout(findAndObserveSearchResultLinks, 350);
   });
 
-  mutations.observe(document.documentElement, { childList: true, subtree: true });
-  scan();
+  searchDomMutationObserver.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+  });
+  findAndObserveSearchResultLinks();
 
-  function scan() {
-    const nextQuery = readQuery();
-    if (nextQuery !== query) query = nextQuery;
-    for (const heading of document.querySelectorAll("#search a > h3")) {
-      const anchor = heading.parentElement;
-      if (!anchor || observed.has(anchor)) continue;
-      const url = anchor.href;
-      if (!url?.startsWith("http")) continue;
-      observed.add(anchor);
-      intersection.observe(anchor);
+  function findAndObserveSearchResultLinks() {
+    const latestSearchQuery = readSearchQueryFromCurrentUrl();
+    if (latestSearchQuery !== currentSearchQuery)
+      currentSearchQuery = latestSearchQuery;
+
+    for (const resultHeading of document.querySelectorAll("#search a > h3")) {
+      const searchResultLink = resultHeading.parentElement;
+      if (!searchResultLink || observedSearchResultLinks.has(searchResultLink))
+        continue;
+      const destinationUrl = searchResultLink.href;
+      if (!destinationUrl?.startsWith("http")) continue;
+      observedSearchResultLinks.add(searchResultLink);
+      viewportProximityObserver.observe(searchResultLink);
     }
   }
 
-  function onIntersection(entries) {
-    for (const entry of entries) {
-      if (!entry.isIntersecting) continue;
-      intersection.unobserve(entry.target);
-      void evaluate(entry.target);
+  function handleViewportIntersections(intersectionEntries) {
+    for (const intersectionEntry of intersectionEntries) {
+      if (!intersectionEntry.isIntersecting) continue;
+      viewportProximityObserver.unobserve(intersectionEntry.target);
+      void requestAndRenderSearchResultEvaluation(intersectionEntry.target);
     }
   }
 
   // 3. tokenを含めず、検索結果metadataだけをservice workerへ渡す。
-  async function evaluate(anchor) {
-    const card = anchor.closest("div.MjjYud") ?? anchor.parentElement;
-    const snippet = card?.querySelector("[data-sncf], .VwiC3b")?.textContent ?? "";
-    const host = createHost();
-    anchor.insertAdjacentElement("afterend", host);
-    renderStatus(host, "loading");
+  async function requestAndRenderSearchResultEvaluation(searchResultLink) {
+    const searchResultCard =
+      searchResultLink.closest("div.MjjYud") ?? searchResultLink.parentElement;
+    const searchResultSnippet =
+      searchResultCard?.querySelector("[data-sncf], .VwiC3b")?.textContent ??
+      "";
+    const annotationContainer = createEvaluationAnnotationContainer();
+    searchResultLink.insertAdjacentElement("afterend", annotationContainer);
+    renderEvaluationRequestStatus(annotationContainer, "loading");
 
     try {
-      const response = await chrome.runtime.sendMessage({
+      const evaluationResponse = await chrome.runtime.sendMessage({
         type: "EVALUATE_RESULT",
         payload: {
-          query,
-          url: anchor.href,
-          title: anchor.textContent,
-          snippet,
-          locale: document.documentElement.lang.toLowerCase().startsWith("ja") ? "ja" : "en",
+          query: currentSearchQuery,
+          url: searchResultLink.href,
+          title: searchResultLink.textContent,
+          snippet: searchResultSnippet,
+          locale: document.documentElement.lang.toLowerCase().startsWith("ja")
+            ? "ja"
+            : "en",
         },
       });
-      if (!response?.ok) return renderStatus(host, response?.reason ?? "temporary_error");
-      renderEvaluation(host, response.payload);
+      if (!evaluationResponse?.ok) {
+        renderEvaluationRequestStatus(
+          annotationContainer,
+          evaluationResponse?.reason ?? "temporary_error",
+        );
+        return;
+      }
+      renderEvaluationResults(annotationContainer, evaluationResponse.payload);
     } catch {
-      renderStatus(host, "temporary_error");
+      renderEvaluationRequestStatus(annotationContainer, "temporary_error");
     }
   }
 
   // 4. Shadow DOMでGoogle側のstyleと評価UIを分離する。
-  function createHost() {
-    const host = document.createElement("div");
-    host.dataset.searchLens = "";
-    const root = host.attachShadow({ mode: "closed" });
-    const style = document.createElement("style");
-    style.textContent = `
+  function createEvaluationAnnotationContainer() {
+    const annotationContainer = document.createElement("div");
+    annotationContainer.dataset.searchLens = "";
+    const annotationShadowRoot = annotationContainer.attachShadow({
+      mode: "closed",
+    });
+    const annotationStyleElement = document.createElement("style");
+    annotationStyleElement.textContent = `
       :host { color-scheme: light dark; }
       .lens { margin: 8px 0 4px; padding: 9px 11px; border: 1px solid #d8dee9;
         border-radius: 10px; background: #f8faff; color: #25324a; font: 12px/1.45 system-ui; }
@@ -82,36 +106,58 @@
         .axis { background: #303957; } .muted { color: #b3bbca; }
       }
     `;
-    const panel = document.createElement("div");
-    panel.className = "lens";
-    panel.setAttribute("aria-live", "polite");
-    root.append(style, panel);
-    host.panel = panel;
-    return host;
+    const annotationPanel = document.createElement("div");
+    annotationPanel.className = "lens";
+    annotationPanel.setAttribute("aria-live", "polite");
+    annotationShadowRoot.append(annotationStyleElement, annotationPanel);
+    annotationContainer.annotationPanel = annotationPanel;
+    return annotationContainer;
   }
 
-  function renderEvaluation(host, evaluation) {
-    const panel = host.panel;
-    panel.replaceChildren();
-    const usefulness = evaluation.axes.find((axis) => axis.id === "usefulness");
-    const headline = element("div", "headline");
-    headline.append(element("span", "mark"));
-    headline.append(
+  function renderEvaluationResults(
+    annotationContainer,
+    evaluationDisplayModel,
+  ) {
+    const annotationPanel = annotationContainer.annotationPanel;
+    annotationPanel.replaceChildren();
+    const usefulnessEvaluation = evaluationDisplayModel.axisEvaluations.find(
+      (axisEvaluation) => axisEvaluation.axisId === "usefulness",
+    );
+    const headlineElement = createStyledElement("div", "headline");
+    headlineElement.append(createStyledElement("span", "mark"));
+    headlineElement.append(
       document.createTextNode(
-        usefulness ? `${label("usefulness")}: ${usefulness.value}/100` : "Search Lens",
+        usefulnessEvaluation
+          ? `${formatIdentifierAsLabel("usefulness")}: ${usefulnessEvaluation.displayValue}/100`
+          : "Search Lens",
       ),
     );
-    panel.append(headline);
-    const axes = element("div", "axes");
-    for (const axis of evaluation.axes.filter((item) => item.id !== "usefulness")) {
-      const confidence = axis.confidence == null ? "" : ` · ${Math.round(axis.confidence * 100)}%`;
-      axes.append(element("span", "axis", `${label(axis.id)}: ${label(axis.value)}${confidence}`));
+    annotationPanel.append(headlineElement);
+
+    const secondaryAxesElement = createStyledElement("div", "axes");
+    for (const axisEvaluation of evaluationDisplayModel.axisEvaluations.filter(
+      (candidateEvaluation) => candidateEvaluation.axisId !== "usefulness",
+    )) {
+      const confidenceSuffix =
+        axisEvaluation.confidence == null
+          ? ""
+          : ` · ${Math.round(axisEvaluation.confidence * 100)}%`;
+      secondaryAxesElement.append(
+        createStyledElement(
+          "span",
+          "axis",
+          `${formatIdentifierAsLabel(axisEvaluation.axisId)}: ${formatIdentifierAsLabel(axisEvaluation.displayValue)}${confidenceSuffix}`,
+        ),
+      );
     }
-    panel.append(axes);
+    annotationPanel.append(secondaryAxesElement);
   }
 
-  function renderStatus(host, status) {
-    const messages = {
+  function renderEvaluationRequestStatus(
+    annotationContainer,
+    evaluationStatusCode,
+  ) {
+    const statusMessagesByCode = {
       loading: "Search Lens: evaluating…",
       not_configured: "Search Lens: add your JEV token in extension settings.",
       invalid_token: "Search Lens: check your JEV token.",
@@ -119,21 +165,26 @@
       temporary_error: "Search Lens: evaluation is temporarily unavailable.",
       invalid_result: "Search Lens: this result could not be evaluated.",
     };
-    host.panel.replaceChildren(element("span", "muted", messages[status] ?? messages.temporary_error));
+    const statusMessage =
+      statusMessagesByCode[evaluationStatusCode] ??
+      statusMessagesByCode.temporary_error;
+    annotationContainer.annotationPanel.replaceChildren(
+      createStyledElement("span", "muted", statusMessage),
+    );
   }
 
-  function element(tag, className, text) {
-    const node = document.createElement(tag);
-    node.className = className;
-    if (text) node.textContent = text;
-    return node;
+  function createStyledElement(htmlTagName, cssClassName, textContent) {
+    const htmlElement = document.createElement(htmlTagName);
+    htmlElement.className = cssClassName;
+    if (textContent) htmlElement.textContent = textContent;
+    return htmlElement;
   }
 
-  function label(value) {
-    return String(value).replaceAll("_", " ");
+  function formatIdentifierAsLabel(identifier) {
+    return String(identifier).replaceAll("_", " ");
   }
 
-  function readQuery() {
+  function readSearchQueryFromCurrentUrl() {
     return new URL(location.href).searchParams.get("q")?.trim() ?? "";
   }
 })();

@@ -1,30 +1,97 @@
-// 1. このfileの責務を型とtestで明示する。
+// 1. 検索結果の入力値を、評価に使える不変なmetadataへ変換する。
 export type SupportedLocale = "en" | "ja";
-export interface SearchResultInput { query?: unknown; url?: unknown; title?: unknown; snippet?: unknown; locale?: unknown; }
-export interface SearchResultValue { query: string; url: string; title: string; snippet: string; locale: SupportedLocale; }
+
+export interface UntrustedSearchResultInput {
+  query?: unknown;
+  url?: unknown;
+  title?: unknown;
+  snippet?: unknown;
+  locale?: unknown;
+}
+
+export interface SearchResultMetadata {
+  query: string;
+  url: string;
+  title: string;
+  snippet: string;
+  locale: SupportedLocale;
+}
+
 const SUPPORTED_LOCALES = new Set<unknown>(["en", "ja"]);
-const TRACKING_PARAMETERS = ["utm_campaign", "utm_content", "utm_medium", "utm_source", "utm_term", "gclid"];
+const TRACKING_QUERY_PARAMETER_NAMES = [
+  "utm_campaign",
+  "utm_content",
+  "utm_medium",
+  "utm_source",
+  "utm_term",
+  "gclid",
+];
 
 // 2. 外部入力を検証してから、変更不能な検索結果として保持する。
 export class SearchResult {
-  readonly value: Readonly<SearchResultValue>;
-  static create(input: SearchResultInput | null | undefined): SearchResult {
-    const query = cleanText(input?.query); if (!query) throw new TypeError("query is required");
-    const title = cleanText(input?.title); if (!title) throw new TypeError("title is required");
-    const url = normalizeUrl(input?.url);
-    if (!SUPPORTED_LOCALES.has(input?.locale)) throw new TypeError("locale must be en or ja");
-    return new SearchResult({ query, url, title, snippet: cleanText(input?.snippet), locale: input!.locale as SupportedLocale });
+  readonly metadata: Readonly<SearchResultMetadata>;
+
+  static fromUntrustedInput(
+    untrustedInput: UntrustedSearchResultInput | null | undefined,
+  ): SearchResult {
+    const normalizedQuery = normalizeWhitespace(untrustedInput?.query);
+    if (!normalizedQuery) throw new TypeError("query is required");
+
+    const normalizedTitle = normalizeWhitespace(untrustedInput?.title);
+    if (!normalizedTitle) throw new TypeError("title is required");
+
+    const normalizedUrl = normalizeHttpUrl(untrustedInput?.url);
+    const supportedLocale = untrustedInput?.locale;
+    if (!SUPPORTED_LOCALES.has(supportedLocale)) {
+      throw new TypeError("locale must be en or ja");
+    }
+
+    return new SearchResult({
+      query: normalizedQuery,
+      url: normalizedUrl,
+      title: normalizedTitle,
+      snippet: normalizeWhitespace(untrustedInput?.snippet),
+      locale: supportedLocale as SupportedLocale,
+    });
   }
-  private constructor(value: SearchResultValue) { this.value = Object.freeze(value); Object.freeze(this); }
-  get identity(): string { return `${this.value.query}\n${this.value.url}`; }
-  toJSON(): SearchResultValue { return { ...this.value }; }
+
+  private constructor(searchResultMetadata: SearchResultMetadata) {
+    this.metadata = Object.freeze(searchResultMetadata);
+    Object.freeze(this);
+  }
+
+  get cacheIdentity(): string {
+    return `${this.metadata.query}\n${this.metadata.url}`;
+  }
+
+  toSerializableMetadata(): SearchResultMetadata {
+    return { ...this.metadata };
+  }
 }
-function cleanText(value: unknown): string { return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : ""; }
-// 3. 内容に影響しないtracking情報だけをidentityから除外する。
-function normalizeUrl(value: unknown): string {
-  let url: URL; try { url = new URL(typeof value === "string" ? value : ""); } catch { throw new TypeError("url must be a valid HTTP URL"); }
-  if (url.protocol !== "https:" && url.protocol !== "http:") throw new TypeError("url must be a valid HTTP URL");
-  url.hash = ""; for (const parameter of TRACKING_PARAMETERS) url.searchParams.delete(parameter);
-  if (url.pathname !== "/") url.pathname = url.pathname.replace(/\/$/, "");
-  url.searchParams.sort(); return url.toString().replace(/\/$/, "");
+
+function normalizeWhitespace(untrustedText: unknown): string {
+  return typeof untrustedText === "string"
+    ? untrustedText.trim().replace(/\s+/g, " ")
+    : "";
+}
+
+// 3. 内容に影響しないtracking情報だけをcache identityから除外する。
+function normalizeHttpUrl(untrustedUrl: unknown): string {
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(typeof untrustedUrl === "string" ? untrustedUrl : "");
+  } catch {
+    throw new TypeError("url must be a valid HTTP URL");
+  }
+  if (parsedUrl.protocol !== "https:" && parsedUrl.protocol !== "http:") {
+    throw new TypeError("url must be a valid HTTP URL");
+  }
+  parsedUrl.hash = "";
+  for (const queryParameterName of TRACKING_QUERY_PARAMETER_NAMES) {
+    parsedUrl.searchParams.delete(queryParameterName);
+  }
+  if (parsedUrl.pathname !== "/")
+    parsedUrl.pathname = parsedUrl.pathname.replace(/\/$/, "");
+  parsedUrl.searchParams.sort();
+  return parsedUrl.toString().replace(/\/$/, "");
 }

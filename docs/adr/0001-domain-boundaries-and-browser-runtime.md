@@ -15,7 +15,7 @@ Search Lensには、小規模なChrome Manifest V3実装が必要です。価値
 
 - `SearchResult`: 1件の検索結果を検証・正規化し、identityを管理する。
 - `EvaluationAxes`: 選択された評価軸を検証・整列し、組み合わせを識別する。
-- `buildQuestions`: 選択された評価軸をTypeSafe API contractへ変換する。
+- `convertEvaluationAxesToTypeSafeQuestions`: 選択された評価軸をTypeSafe API contractへ変換する。
 - `Evaluation`: providerの回答を検証し、安全に表示できる値へ変換する。
 
 service workerとoptions pageではブラウザー標準のJavaScript moduleを使います。Chromeのcontent scriptはbundlingなしではES moduleとして宣言できないため、依存を持たせません。決定的なtestに価値があるTypeSafe client境界に限って、`fetch`、`sleep`、乱数生成を注入します。

@@ -1,8 +1,11 @@
 // 1. browser／provider境界はruntimeで検証する。詳細はADR 0002を参照。
 // @ts-nocheck
-import { AXIS_IDS, EvaluationAxes } from "../domain/evaluation-axes.js";
+import {
+  EVALUATION_AXIS_IDS,
+  EvaluationAxes,
+} from "../domain/evaluation-axes.js";
 
-const AXIS_COPY = {
+const EVALUATION_AXIS_COPY_BY_ID = {
   usefulness: ["推定有用度", "今回の検索にどれくらい役立つか"],
   prerequisite_level: ["必要な前提知識", "入門から専門家向けまで"],
   source_type: ["情報源の種類", "公式、解説、コミュニティなど"],
@@ -15,80 +18,98 @@ const AXIS_COPY = {
   commercial_intent: ["商用性", "購入や登録への誘導の強さ"],
 };
 
-const form = document.querySelector("#settings-form");
-const axesContainer = document.querySelector("#axes");
-const tokenInput = document.querySelector("#api-key");
-const tokenState = document.querySelector("#token-state");
-const notice = document.querySelector("#notice");
+const settingsFormElement = document.querySelector("#settings-form");
+const evaluationAxesContainer = document.querySelector("#axes");
+const apiKeyInputElement = document.querySelector("#api-key");
+const tokenRegistrationStateElement = document.querySelector("#token-state");
+const saveNoticeElement = document.querySelector("#notice");
 
 // 2. domainが許可した評価軸だけをtoggleとして描画する。
-for (const id of AXIS_IDS) {
-  const label = document.createElement("label");
-  label.className = "axis";
-  const input = document.createElement("input");
-  input.type = "checkbox";
-  input.name = "axis";
-  input.value = id;
-  const copy = document.createElement("span");
-  copy.textContent = AXIS_COPY[id][0];
-  const detail = document.createElement("small");
-  detail.textContent = AXIS_COPY[id][1];
-  copy.append(detail);
-  label.append(input, copy);
-  axesContainer.append(label);
+for (const evaluationAxisId of EVALUATION_AXIS_IDS) {
+  const axisToggleLabelElement = document.createElement("label");
+  axisToggleLabelElement.className = "axis";
+  const axisCheckboxElement = document.createElement("input");
+  axisCheckboxElement.type = "checkbox";
+  axisCheckboxElement.name = "axis";
+  axisCheckboxElement.value = evaluationAxisId;
+  const axisCopyElement = document.createElement("span");
+  axisCopyElement.textContent = EVALUATION_AXIS_COPY_BY_ID[evaluationAxisId][0];
+  const axisDescriptionElement = document.createElement("small");
+  axisDescriptionElement.textContent =
+    EVALUATION_AXIS_COPY_BY_ID[evaluationAxisId][1];
+  axisCopyElement.append(axisDescriptionElement);
+  axisToggleLabelElement.append(axisCheckboxElement, axisCopyElement);
+  evaluationAxesContainer.append(axisToggleLabelElement);
 }
 
-await load();
+await loadStoredSettingsIntoForm();
 
 // 3. tokenは再表示せず、設定変更時は古い評価cacheを破棄する。
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const enabledAxes = selectedAxes();
-  try {
-    EvaluationAxes.create(enabledAxes);
-  } catch {
-    show("評価軸を1つ以上オンにしてください。", true);
-    return;
-  }
-  const stored = await chrome.storage.local.get("secrets");
-  const apiKey = tokenInput.value.trim();
-  await chrome.storage.local.set({
-    settings: {
-      enabled: document.querySelector("#enabled").checked,
-      enabledAxes,
-    },
-    secrets: apiKey ? { jevApiKey: apiKey } : stored.secrets ?? {},
-    evaluationCache: {},
-  });
-  tokenInput.value = "";
-  await load();
-  show("設定を保存しました。次の検索結果から反映されます。");
-});
+settingsFormElement.addEventListener(
+  "submit",
+  async (settingsFormSubmitEvent) => {
+    settingsFormSubmitEvent.preventDefault();
+    const enabledEvaluationAxisIds = readSelectedEvaluationAxisIds();
+    try {
+      EvaluationAxes.fromUntrustedIds(enabledEvaluationAxisIds);
+    } catch {
+      showSaveNotice("評価軸を1つ以上オンにしてください。", true);
+      return;
+    }
+    const storedSecretData = await chrome.storage.local.get("secrets");
+    const enteredApiKey = apiKeyInputElement.value.trim();
+    await chrome.storage.local.set({
+      settings: {
+        enabled: document.querySelector("#enabled").checked,
+        enabledAxes: enabledEvaluationAxisIds,
+      },
+      secrets: enteredApiKey
+        ? { jevApiKey: enteredApiKey }
+        : (storedSecretData.secrets ?? {}),
+      evaluationCache: {},
+    });
+    apiKeyInputElement.value = "";
+    await loadStoredSettingsIntoForm();
+    showSaveNotice("設定を保存しました。次の検索結果から反映されます。");
+  },
+);
 
 document.querySelector("#delete-token").addEventListener("click", async () => {
   await chrome.storage.local.set({ secrets: {}, evaluationCache: {} });
-  tokenInput.value = "";
-  await load();
-  show("JEV tokenを削除しました。");
+  apiKeyInputElement.value = "";
+  await loadStoredSettingsIntoForm();
+  showSaveNotice("JEV tokenを削除しました。");
 });
 
-async function load() {
-  const { settings, secrets } = await chrome.storage.local.get(["settings", "secrets"]);
-  const axes = settings?.enabledAxes ?? EvaluationAxes.defaults().ids;
+async function loadStoredSettingsIntoForm() {
+  const { settings, secrets } = await chrome.storage.local.get([
+    "settings",
+    "secrets",
+  ]);
+  const enabledEvaluationAxisIds =
+    settings?.enabledAxes ?? EvaluationAxes.learningPreset().enabledAxisIds;
   document.querySelector("#enabled").checked = settings?.enabled ?? true;
-  for (const input of document.querySelectorAll('input[name="axis"]')) {
-    input.checked = axes.includes(input.value);
+  for (const axisCheckboxElement of document.querySelectorAll(
+    'input[name="axis"]',
+  )) {
+    axisCheckboxElement.checked = enabledEvaluationAxisIds.includes(
+      axisCheckboxElement.value,
+    );
   }
-  const ready = Boolean(secrets?.jevApiKey);
-  tokenState.textContent = ready ? "登録済み" : "未登録";
-  tokenState.classList.toggle("ready", ready);
+  const isApiKeyRegistered = Boolean(secrets?.jevApiKey);
+  tokenRegistrationStateElement.textContent = isApiKeyRegistered
+    ? "登録済み"
+    : "未登録";
+  tokenRegistrationStateElement.classList.toggle("ready", isApiKeyRegistered);
 }
 
-function selectedAxes() {
-  return [...document.querySelectorAll('input[name="axis"]:checked')].map((input) => input.value);
+function readSelectedEvaluationAxisIds() {
+  return [...document.querySelectorAll('input[name="axis"]:checked')].map(
+    (axisCheckboxElement) => axisCheckboxElement.value,
+  );
 }
 
-function show(message, error = false) {
-  notice.textContent = message;
-  notice.style.color = error ? "#b42318" : "#16784a";
+function showSaveNotice(noticeMessage, isError = false) {
+  saveNoticeElement.textContent = noticeMessage;
+  saveNoticeElement.style.color = isError ? "#b42318" : "#16784a";
 }
