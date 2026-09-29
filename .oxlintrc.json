@@ -4,5 +4,8 @@
     "suspicious": "warn",
     "perf": "warn"
   },
-  "ignorePatterns": ["build/**", "build-tests/**"]
+  "ignorePatterns": [
+    "build/**",
+    "build-tests/**"
+  ]
 }

@@ -85,3 +85,7 @@ Chromeでの確認手順:
 - 新しい権限をmanifestへ足す前に、なぜ必要かADRへ残す。
 - 「ローカル保存」は絶対安全という意味ではない。端末やChrome profileへアクセスできる人から守る仕組みではない。
 - 実検索では、検索語、URL、タイトル、スニペットがTypeSafeへ送られる。
+
+## 7. testとCI
+
+testは対象fileと同じdirectoryにあります。たとえば`domain/search-result.ts`のtestは`domain/search-result.test.ts`です。`pnpm test`はこれらをcompileしてNode.jsで実行します。GitHub Actionsはpull requestごとに`pnpm validate`を実行するため、format、lint、型、test、Chrome拡張buildの失敗をmerge前に確認できます。

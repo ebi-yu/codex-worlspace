@@ -3,12 +3,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { EvaluationAxes } from "../../extension/src/domain/evaluation-axes.js";
-import { SearchResult } from "../../extension/src/domain/search-result.js";
+import { EvaluationAxes } from "../domain/evaluation-axes.js";
+import { SearchResult } from "../domain/search-result.js";
 import {
   ProviderError,
   TypeSafeClient,
-} from "../../extension/src/infrastructure/typesafe-client.js";
+} from "./typesafe-client.js";
 
 const result = SearchResult.create({
   query: "manifest v3",

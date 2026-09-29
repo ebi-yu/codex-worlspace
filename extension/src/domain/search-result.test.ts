@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { SearchResult } from "../../extension/src/domain/search-result.js";
+import { SearchResult } from "./search-result.js";
 
 test("SearchResult normalizes identity without discarding meaningful query parameters", () => {
   const result = SearchResult.create({

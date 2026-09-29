@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { EvaluationAxes } from "../../extension/src/domain/evaluation-axes.js";
+import { EvaluationAxes } from "./evaluation-axes.js";
 
 test("EvaluationAxes starts with the small high-value learning set", () => {
   const axes = EvaluationAxes.defaults();

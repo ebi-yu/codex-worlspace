@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { Evaluation } from "../../extension/src/domain/evaluation.js";
+import { Evaluation } from "./evaluation.js";
 
 test("Evaluation converts TypeSafe answers into honest display values", () => {
   const evaluation = Evaluation.fromTypeSafe({

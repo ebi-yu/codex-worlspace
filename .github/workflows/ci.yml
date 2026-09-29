@@ -1,0 +1,42 @@
+name: 継続的インテグレーション
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: 整形・静的解析・テスト・ビルド
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      # 1. pull requestのsourceを検証環境へ取得する。
+      - name: sourceを取得
+        uses: actions/checkout@v4
+
+      # 2. package.jsonで指定したversionと同じpnpmを用意する。
+      - name: pnpmを設定
+        uses: pnpm/action-setup@v4
+
+      # 3. Chrome拡張のbuild条件と同じNode.js 20を使う。
+      - name: Node.jsを設定
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # 4. lockfile導入前でもCIが依存関係を解決できるよう明示する。
+      - name: 依存packageをinstall
+        run: pnpm install --no-frozen-lockfile
+
+      # 5. format、lint、型、domain test、Vite buildを順番に検証する。
+      - name: project全体を検証
+        run: pnpm validate

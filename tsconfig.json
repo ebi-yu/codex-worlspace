@@ -22,7 +22,6 @@
     "noEmit": true
   },
   "include": [
-    "extension/src/**/*.ts",
-    "test/**/*.ts"
+    "extension/src/**/*.ts"
   ]
 }

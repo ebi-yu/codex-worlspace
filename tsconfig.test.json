@@ -5,5 +5,7 @@
     "outDir": "build-tests",
     "sourceMap": false
   },
-  "include": ["extension/src/**/*.ts", "test/**/*.ts"]
+  "include": [
+    "extension/src/**/*.ts"
+  ]
 }

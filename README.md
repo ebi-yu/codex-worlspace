@@ -49,4 +49,4 @@ pnpm validate
 
 トークンは BYOK 方式です。実際の検索語、検索結果 URL、タイトル、スニペットが TypeSafe API へ送信されることを理解したうえで有効化してください。
 
-実装上の判断理由は [ADR 0001](docs/adr/0001-domain-boundaries-and-browser-runtime.md) と [ADR 0002](docs/adr/0002-typescript-build-boundary.md)、[ADR 0003](docs/adr/0003-pnpm-vite-and-oxc-tooling.md) に記録しています。
+実装上の判断理由は [ADR 0001](docs/adr/0001-domain-boundaries-and-browser-runtime.md) と [ADR 0002](docs/adr/0002-typescript-build-boundary.md)、[ADR 0003](docs/adr/0003-pnpm-vite-and-oxc-tooling.md)、[ADR 0004](docs/adr/0004-test-colocation-and-ci.md) に記録しています。

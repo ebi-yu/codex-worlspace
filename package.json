@@ -10,9 +10,9 @@
   },
   "scripts": {
     "build": "pnpm check && vite build",
-    "test": "rm -rf build-tests && tsc -p tsconfig.test.json && node --test build-tests/test/**/*.test.js",
+    "test": "rm -rf build-tests && tsc -p tsconfig.test.json && node --test build-tests/extension/src/**/*.test.js",
     "check": "tsc --noEmit",
-    "lint": "oxlint extension/src test vite.config.mjs",
+    "lint": "oxlint extension/src vite.config.mjs",
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
     "validate": "pnpm format:check && pnpm lint && pnpm check && pnpm test && pnpm build"

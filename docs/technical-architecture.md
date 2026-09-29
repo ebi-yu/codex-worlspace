@@ -56,19 +56,19 @@ extension/
 │  ├─ content/
 │  │  └─ content-script.ts
 │  ├─ domain/
-│  │  ├─ search-result.ts
-│  │  ├─ evaluation-axes.ts
-│  │  ├─ questions.ts
-│  │  └─ evaluation.ts
+│  │  ├─ search-result.ts / search-result.test.ts
+│  │  ├─ evaluation-axes.ts / evaluation-axes.test.ts
+│  │  ├─ questions.ts / questions.test.ts
+│  │  └─ evaluation.ts / evaluation.test.ts
 │  ├─ options/
 │  │  ├─ options.html
 │  │  ├─ options.ts
 │  │  └─ options.css
 │  └─ infrastructure/
-│     └─ typesafe-client.ts
-test/
-├─ domain/
-└─ infrastructure/
+│     └─ typesafe-client.ts / typesafe-client.test.ts
+.github/
+└─ workflows/
+   └─ ci.yml
 ```
 
 ソースは TypeScript で記述し、`pnpm build` で `build/extension/` に Chrome が実行する JavaScript と静的ファイルを生成します。型導入と軽量なドメイン境界の理由は [ADR 0002](adr/0002-typescript-build-boundary.md)、pnpm・Vite・Oxcを選んだ理由は [ADR 0003](adr/0003-pnpm-vite-and-oxc-tooling.md) に記録します。DOM fixture と i18n リソースは、その機能を実装する段階で追加します。
@@ -410,6 +410,8 @@ Chrome i18n の message key を表示 DTO の `labelKey` から参照します�
 
 ### Unit
 
+testは対象実装と同じdirectoryへ`*.test.ts`として置きます。実装とtestの対応を移動せず確認でき、Viteは明示的なentryだけをbuildするためtestは拡張packageへ入りません。
+
 - URL 正規化と tracking parameter 除去。
 - 軸トグルからの `questions` 生成。
 - `score` / `choice` / `noul` の response parser。
@@ -452,3 +454,7 @@ Chrome i18n の message key を表示 DTO の `labelKey` から参照します�
 9. 実検索での限定的な検証後、対応 Google ホストを追加。
 
 最初の縦切りでは「設定でトークンを保存 → 1 件の検索結果を抽出 → mocked evaluation を表示」までを作ります。TypeSafe 通信より前に DOM 抽出、メッセージ境界、UI 隔離を検証することで、外部 API と Google DOM の問題を切り分けられます。
+
+## 19. CI
+
+GitHub Actionsはpull requestと`main`へのpushで`pnpm validate`を実行し、Oxfmt、Oxlint、型検査、test、Vite buildを確認します。localとCIで同じcommandを使う理由は[ADR 0004](adr/0004-test-colocation-and-ci.md)に記録します。

@@ -3,8 +3,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { EvaluationAxes } from "../../extension/src/domain/evaluation-axes.js";
-import { buildQuestions } from "../../extension/src/domain/questions.js";
+import { EvaluationAxes } from "./evaluation-axes.js";
+import { buildQuestions } from "./questions.js";
 
 test("buildQuestions sends exactly the axes the user enabled", () => {
   const questions = buildQuestions(
