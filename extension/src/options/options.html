@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Search Lens settings</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="brand">SL</div>
+        <div>
+          <p class="eyebrow">SEARCH LENS</p>
+          <h1>検索結果に、判断材料を。</h1>
+          <p class="lead">JEVで推定した有用度や必要な前提知識を、Google検索結果の横に表示します。</p>
+        </div>
+      </header>
+
+      <form id="settings-form">
+        <section>
+          <div class="section-heading">
+            <div><p class="step">01</p><h2>JEV token</h2></div>
+            <span id="token-state" class="status">未登録</span>
+          </div>
+          <label for="api-key">ユーザー自身のTypeSafe APIキー</label>
+          <div class="token-row">
+            <input id="api-key" name="api-key" type="password" autocomplete="off" placeholder="貼り付けて保存" />
+            <button type="button" id="delete-token" class="secondary">削除</button>
+          </div>
+          <p class="hint">キーはこの端末内に保存され、Googleページやログには表示しません。</p>
+        </section>
+
+        <section>
+          <div class="section-heading"><div><p class="step">02</p><h2>評価軸</h2></div></div>
+          <p class="hint">オンにした軸だけをJEVへ質問します。少ないほど結果がシンプルになります。</p>
+          <div id="axes" class="axes"></div>
+        </section>
+
+        <footer>
+          <label class="master"><input id="enabled" type="checkbox" /> Google検索で有効にする</label>
+          <button type="submit" class="primary">設定を保存</button>
+        </footer>
+        <p id="notice" class="notice" role="status" aria-live="polite"></p>
+      </form>
+    </main>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "build-tests",
+    "sourceMap": false
+  },
+  "include": ["extension/src/**/*.ts", "test/**/*.ts"]
+}

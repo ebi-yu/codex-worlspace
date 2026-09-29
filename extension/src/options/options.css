@@ -1,0 +1,30 @@
+:root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: #182230; background: #f0f3f8; }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; padding: 48px 20px; background: radial-gradient(circle at 15% 0%, #e4eaff, transparent 32%), #f4f6fa; }
+main { max-width: 760px; margin: auto; }
+header { display: grid; grid-template-columns: 64px 1fr; gap: 22px; margin-bottom: 28px; }
+.brand { width: 64px; height: 64px; display: grid; place-items: center; border-radius: 18px; background: #253a86; color: white; font-weight: 800; letter-spacing: -.04em; box-shadow: 0 12px 30px #253a8633; }
+.eyebrow, .step { margin: 0 0 5px; color: #5369bd; font-size: 11px; font-weight: 800; letter-spacing: .15em; }
+h1 { margin: 0; font-size: clamp(28px, 5vw, 42px); letter-spacing: -.04em; }
+.lead { margin: 10px 0 0; color: #5e6a7c; line-height: 1.65; }
+form { display: grid; gap: 16px; }
+section, footer { padding: 24px; border: 1px solid #dce2ec; border-radius: 18px; background: #fff; box-shadow: 0 10px 35px #3440540a; }
+.section-heading { display: flex; justify-content: space-between; align-items: start; margin-bottom: 18px; }
+h2 { margin: 0; font-size: 20px; }
+label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 700; }
+.token-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+input[type="password"] { width: 100%; padding: 12px 14px; border: 1px solid #cbd3df; border-radius: 10px; font: inherit; }
+button { border: 0; border-radius: 10px; padding: 11px 18px; font: inherit; font-weight: 750; cursor: pointer; }
+.primary { background: #253a86; color: #fff; }
+.secondary { background: #eef1f6; color: #364152; }
+.hint { margin: 9px 0 0; color: #697586; font-size: 12px; line-height: 1.6; }
+.status { padding: 5px 9px; border-radius: 999px; background: #eef1f6; color: #697586; font-size: 12px; }
+.status.ready { background: #e8f7ef; color: #16784a; }
+.axes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
+.axis { display: flex; gap: 10px; align-items: start; margin: 0; padding: 13px; border: 1px solid #e2e7ef; border-radius: 12px; font-weight: 650; }
+.axis small { display: block; margin-top: 3px; color: #7a8493; font-weight: 450; line-height: 1.4; }
+.axis input { margin-top: 3px; accent-color: #253a86; }
+footer { display: flex; align-items: center; justify-content: space-between; }
+.master { display: flex; align-items: center; gap: 8px; margin: 0; }
+.notice { min-height: 20px; margin: 0; text-align: center; color: #16784a; font-size: 13px; }
+@media (max-width: 620px) { body { padding: 28px 14px; } header { grid-template-columns: 48px 1fr; } .brand { width: 48px; height: 48px; border-radius: 14px; } .axes { grid-template-columns: 1fr; } footer { gap: 18px; align-items: stretch; flex-direction: column; } }

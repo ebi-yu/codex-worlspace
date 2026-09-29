@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "Search Lens",
+  "description": "See a configurable JEV evaluation beside Google search results.",
+  "version": "0.1.0",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://www.google.com/search*",
+    "https://www.google.co.jp/search*",
+    "https://api.typesafe.ai/*"
+  ],
+  "background": {
+    "service_worker": "src/background/service-worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.google.com/search*",
+        "https://www.google.co.jp/search*"
+      ],
+      "js": ["src/content/content-script.js"]
+    }
+  ],
+  "options_page": "src/options/options.html",
+  "action": {
+    "default_title": "Search Lens settings"
+  }
+}
