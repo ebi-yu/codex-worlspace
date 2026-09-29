@@ -19,21 +19,14 @@ const SCORE_QUESTION_DEFINITIONS = Object.freeze({
   freshness: {
     instructions:
       "How likely is `result` to be current enough for `query`? Use the lowest level when metadata is insufficient.",
-    criteria: [
-      "Unknown",
-      "Possibly outdated",
-      "Probably current",
-      "Clearly current",
-    ],
+    criteria: ["Unknown", "Possibly outdated", "Probably current", "Clearly current"],
   },
   transparency: {
-    instructions:
-      "How transparent does `result` appear about authorship and sources?",
+    instructions: "How transparent does `result` appear about authorship and sources?",
     criteria: ["Unknown", "Limited", "Adequate", "Highly transparent"],
   },
   commercial_intent: {
-    instructions:
-      "How strongly is `result` focused on purchase or registration?",
+    instructions: "How strongly is `result` focused on purchase or registration?",
     criteria: [
       "Informational",
       "Some commercial intent",
@@ -115,8 +108,7 @@ export function convertEvaluationAxesToTypeSafeQuestions(evaluationAxes) {
           axisId,
           {
             type: "noul",
-            instructions:
-              "Is `result` likely to be an official or primary source?",
+            instructions: "Is `result` likely to be an official or primary source?",
             criteria: {
               true: "Official, original, or first-party information",
               false: "Secondary, derivative, or unknown information",

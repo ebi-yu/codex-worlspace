@@ -2,10 +2,7 @@
 // @ts-nocheck
 import { EvaluationAxes } from "../domain/evaluation-axes.js";
 import { SearchResult } from "../domain/search-result.js";
-import {
-  ProviderError,
-  TypeSafeClient,
-} from "../infrastructure/typesafe-client.js";
+import { ProviderError, TypeSafeClient } from "../infrastructure/typesafe-client.js";
 
 const DEFAULT_EXTENSION_SETTINGS = Object.freeze({
   enabled: true,
@@ -49,30 +46,21 @@ chrome.runtime.onMessage.addListener(
 );
 
 async function respondToEvaluationRequest(untrustedSearchResultInput) {
-  const searchResult = SearchResult.fromUntrustedInput(
-    untrustedSearchResultInput,
-  );
+  const searchResult = SearchResult.fromUntrustedInput(untrustedSearchResultInput);
   const {
     settings: extensionSettings = DEFAULT_EXTENSION_SETTINGS,
     secrets: extensionSecrets = {},
     evaluationCache = {},
-  } = await chrome.storage.local.get([
-    "settings",
-    "secrets",
-    "evaluationCache",
-  ]);
+  } = await chrome.storage.local.get(["settings", "secrets", "evaluationCache"]);
   if (!extensionSettings.enabled) throw new ProviderError("disabled");
 
-  const evaluationAxes = EvaluationAxes.fromUntrustedIds(
-    extensionSettings.enabledAxes,
-  );
+  const evaluationAxes = EvaluationAxes.fromUntrustedIds(extensionSettings.enabledAxes);
   const searchResultLocale = searchResult.toSerializableMetadata().locale;
   const evaluationCacheKey = await calculateSha256HexDigest(
     `${searchResult.cacheIdentity}\n${searchResultLocale}\n${evaluationAxes.cacheKeySegment}`,
   );
   const cachedEvaluation = evaluationCache[evaluationCacheKey];
-  if (cachedEvaluation?.expiresAt > Date.now())
-    return cachedEvaluation.displayModel;
+  if (cachedEvaluation?.expiresAt > Date.now()) return cachedEvaluation.displayModel;
 
   if (!pendingEvaluationPromisesByCacheKey.has(evaluationCacheKey)) {
     pendingEvaluationPromisesByCacheKey.set(
@@ -86,22 +74,17 @@ async function respondToEvaluationRequest(untrustedSearchResultInput) {
         .then(async (evaluation) => {
           const evaluationDisplayModel = evaluation.toDisplayModel();
           const latestEvaluationCache =
-            (await chrome.storage.local.get("evaluationCache"))
-              .evaluationCache ?? {};
+            (await chrome.storage.local.get("evaluationCache")).evaluationCache ?? {};
           latestEvaluationCache[evaluationCacheKey] = {
             displayModel: evaluationDisplayModel,
             expiresAt: Date.now() + EVALUATION_CACHE_TTL_MILLISECONDS,
           };
           await chrome.storage.local.set({
-            evaluationCache: removeExpiredAndExcessCacheEntries(
-              latestEvaluationCache,
-            ),
+            evaluationCache: removeExpiredAndExcessCacheEntries(latestEvaluationCache),
           });
           return evaluationDisplayModel;
         })
-        .finally(() =>
-          pendingEvaluationPromisesByCacheKey.delete(evaluationCacheKey),
-        ),
+        .finally(() => pendingEvaluationPromisesByCacheKey.delete(evaluationCacheKey)),
     );
   }
   return pendingEvaluationPromisesByCacheKey.get(evaluationCacheKey);

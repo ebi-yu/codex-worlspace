@@ -55,10 +55,7 @@ test("TypeSafeClient sends the user's key and only enabled questions", async () 
   assert.equal(requestBody.model, "jev-latest");
   assert.deepEqual(Object.keys(requestBody.questions), ["usefulness"]);
   assert.equal(requestBody.state.result.title, "Chrome Extensions");
-  assert.equal(
-    evaluation.toDisplayModel().axisEvaluations[0].displayValue,
-    100,
-  );
+  assert.equal(evaluation.toDisplayModel().axisEvaluations[0].displayValue, 100);
 });
 
 test("TypeSafeClient retries overload once without leaking provider text", async () => {

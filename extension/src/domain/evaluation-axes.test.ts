@@ -23,10 +23,7 @@ test("EvaluationAxes canonicalizes toggles for stable cache and request behavior
     "source_type",
   ]);
 
-  assert.deepEqual(evaluationAxes.enabledAxisIds, [
-    "usefulness",
-    "source_type",
-  ]);
+  assert.deepEqual(evaluationAxes.enabledAxisIds, ["usefulness", "source_type"]);
   assert.equal(evaluationAxes.cacheKeySegment, "usefulness,source_type");
   assert.equal(evaluationAxes.matchedPresetName, "simple");
 });

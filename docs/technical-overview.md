@@ -93,3 +93,7 @@ testは対象fileと同じdirectoryにあります。たとえば`domain/search-
 ## 8. 名前の読み方と付け方
 
 このprojectでは短い名前より、役割を一意に読める名前を優先します。たとえば検索結果は`result`ではなく`searchResult`、表示値は`value`ではなく`displayValue`、評価依頼は`evaluate`ではなく`requestSearchResultEvaluation`と書きます。外部APIが定義した`state.result`やHTML inputの`.value`は変更できないため、境界を越えた直後に具体的な内部名へ移します。判断基準と変更例は[ADR 0006](adr/0006-unambiguous-domain-naming.md)を参照してください。
+
+## 9. 改行とformat
+
+source codeはOxfmtの`printWidth: 88`を基準にします。ただし、長い式をformatter任せで折り返すだけで意味が追いにくい場合は、`axisLabel`や`axisSummaryText`のような目的が明確な中間変数へ分けます。外部APIへ送るprompt文字列など、分割すると内容を誤認しやすい文字列literalは例外です。

@@ -52,8 +52,7 @@
     const searchResultCard =
       searchResultLink.closest("div.MjjYud") ?? searchResultLink.parentElement;
     const searchResultSnippet =
-      searchResultCard?.querySelector("[data-sncf], .VwiC3b")?.textContent ??
-      "";
+      searchResultCard?.querySelector("[data-sncf], .VwiC3b")?.textContent ?? "";
     const annotationContainer = createEvaluationAnnotationContainer();
     searchResultLink.insertAdjacentElement("afterend", annotationContainer);
     renderEvaluationRequestStatus(annotationContainer, "loading");
@@ -114,10 +113,7 @@
     return annotationContainer;
   }
 
-  function renderEvaluationResults(
-    annotationContainer,
-    evaluationDisplayModel,
-  ) {
+  function renderEvaluationResults(annotationContainer, evaluationDisplayModel) {
     const annotationPanel = annotationContainer.annotationPanel;
     annotationPanel.replaceChildren();
     const usefulnessEvaluation = evaluationDisplayModel.axisEvaluations.find(
@@ -142,21 +138,15 @@
         axisEvaluation.confidence == null
           ? ""
           : ` · ${Math.round(axisEvaluation.confidence * 100)}%`;
-      secondaryAxesElement.append(
-        createStyledElement(
-          "span",
-          "axis",
-          `${formatIdentifierAsLabel(axisEvaluation.axisId)}: ${formatIdentifierAsLabel(axisEvaluation.displayValue)}${confidenceSuffix}`,
-        ),
-      );
+      const axisLabel = formatIdentifierAsLabel(axisEvaluation.axisId);
+      const axisDisplayValue = formatIdentifierAsLabel(axisEvaluation.displayValue);
+      const axisSummaryText = `${axisLabel}: ${axisDisplayValue}${confidenceSuffix}`;
+      secondaryAxesElement.append(createStyledElement("span", "axis", axisSummaryText));
     }
     annotationPanel.append(secondaryAxesElement);
   }
 
-  function renderEvaluationRequestStatus(
-    annotationContainer,
-    evaluationStatusCode,
-  ) {
+  function renderEvaluationRequestStatus(annotationContainer, evaluationStatusCode) {
     const statusMessagesByCode = {
       loading: "Search Lens: evaluating…",
       not_configured: "Search Lens: add your JEV token in extension settings.",

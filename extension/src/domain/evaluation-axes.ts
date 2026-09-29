@@ -37,9 +37,7 @@ export class EvaluationAxes {
     return EvaluationAxes.fromUntrustedIds(AXIS_PRESETS.learning);
   }
 
-  static fromUntrustedIds(
-    untrustedAxisIds: readonly unknown[],
-  ): EvaluationAxes {
+  static fromUntrustedIds(untrustedAxisIds: readonly unknown[]): EvaluationAxes {
     if (!Array.isArray(untrustedAxisIds) || untrustedAxisIds.length === 0) {
       throw new TypeError("at least one evaluation axis is required");
     }
@@ -48,9 +46,7 @@ export class EvaluationAxes {
       (axisId) => !AXIS_SORT_INDEX.has(axisId as EvaluationAxisId),
     );
     if (unsupportedAxisId) {
-      throw new TypeError(
-        `unknown evaluation axis: ${String(unsupportedAxisId)}`,
-      );
+      throw new TypeError(`unknown evaluation axis: ${String(unsupportedAxisId)}`);
     }
     const sortedAxisIds = deduplicatedAxisIds as EvaluationAxisId[];
     sortedAxisIds.sort(

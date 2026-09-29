@@ -27,11 +27,7 @@ export class TypeSafeClient {
     this.generateRandomFraction = generateRandomFraction;
   }
 
-  async requestSearchResultEvaluation({
-    apiKey,
-    searchResult,
-    evaluationAxes,
-  }) {
+  async requestSearchResultEvaluation({ apiKey, searchResult, evaluationAxes }) {
     if (typeof apiKey !== "string" || !apiKey.trim()) {
       throw new ProviderError("not_configured");
     }
@@ -56,29 +52,23 @@ export class TypeSafeClient {
     ) {
       let httpResponse;
       try {
-        httpResponse = await this.performHttpRequest(
-          TYPESAFE_EVALUATION_ENDPOINT,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${apiKey}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(requestBody),
+        httpResponse = await this.performHttpRequest(TYPESAFE_EVALUATION_ENDPOINT, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
           },
-        );
+          body: JSON.stringify(requestBody),
+        });
       } catch {
         throw new ProviderError("network_error");
       }
 
       if (httpResponse.ok) {
-        return Evaluation.fromTypeSafeResponse(
-          await parseJsonResponse(httpResponse),
-        );
+        return Evaluation.fromTypeSafeResponse(await parseJsonResponse(httpResponse));
       }
       if (httpResponse.status === 401) throw new ProviderError("invalid_token");
-      if (httpResponse.status === 422)
-        throw new ProviderError("invalid_request");
+      if (httpResponse.status === 422) throw new ProviderError("invalid_request");
       if (httpResponse.status !== 429 && httpResponse.status !== 529) {
         throw new ProviderError("provider_error");
       }

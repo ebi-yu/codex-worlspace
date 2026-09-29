@@ -28,11 +28,7 @@ function copyChromeExtensionStaticAssets() {
               "extension/src/options",
               staticAssetFileName,
             ),
-            resolve(
-              extensionBuildDirectory,
-              "src/options",
-              staticAssetFileName,
-            ),
+            resolve(extensionBuildDirectory, "src/options", staticAssetFileName),
           ),
         ),
       );

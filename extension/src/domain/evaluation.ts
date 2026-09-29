@@ -10,17 +10,12 @@ export class Evaluation {
     ) {
       throw new TypeError("invalid TypeSafe response");
     }
-    const axisEvaluations = Object.entries(
-      untrustedResponsePayload.answers,
-    ).map(([axisId, untrustedAnswer]) =>
-      parseTypeSafeAnswer(axisId, untrustedAnswer),
+    const axisEvaluations = Object.entries(untrustedResponsePayload.answers).map(
+      ([axisId, untrustedAnswer]) => parseTypeSafeAnswer(axisId, untrustedAnswer),
     );
     const inputTokenCount = untrustedResponsePayload.usage?.input_tokens;
     const outputTokenCount = untrustedResponsePayload.usage?.output_tokens;
-    if (
-      !Number.isInteger(inputTokenCount) ||
-      !Number.isInteger(outputTokenCount)
-    ) {
+    if (!Number.isInteger(inputTokenCount) || !Number.isInteger(outputTokenCount)) {
       throw new TypeError("invalid token usage");
     }
     return new Evaluation(untrustedResponsePayload.model, axisEvaluations, {
@@ -52,8 +47,7 @@ function parseTypeSafeAnswer(axisId, untrustedAnswer) {
     return parseScoreAnswer(axisId, untrustedAnswer);
   if (untrustedAnswer.type === "choice")
     return parseChoiceAnswer(axisId, untrustedAnswer);
-  if (untrustedAnswer.type === "noul")
-    return parseNoulAnswer(axisId, untrustedAnswer);
+  if (untrustedAnswer.type === "noul") return parseNoulAnswer(axisId, untrustedAnswer);
   throw new TypeError(`invalid answer type: ${axisId}`);
 }
 
@@ -104,17 +98,12 @@ function parseChoiceAnswer(axisId, choiceAnswer) {
     displayValue: choiceAnswer.choice,
     confidence: choiceAnswer.confidence,
     probabilityDistribution: structuredClone(choiceAnswer.probabilities),
-    evaluationStatus:
-      choiceAnswer.choice === "unknown" ? "unknown" : "evaluated",
+    evaluationStatus: choiceAnswer.choice === "unknown" ? "unknown" : "evaluated",
   };
 }
 
 function parseNoulAnswer(axisId, noulAnswer) {
-  if (
-    !Number.isFinite(noulAnswer.noul) ||
-    noulAnswer.noul < 0 ||
-    noulAnswer.noul > 1
-  ) {
+  if (!Number.isFinite(noulAnswer.noul) || noulAnswer.noul < 0 || noulAnswer.noul > 1) {
     throw new TypeError(`invalid noul answer: ${axisId}`);
   }
   return {
@@ -127,8 +116,6 @@ function parseNoulAnswer(axisId, noulAnswer) {
 
 function isNonArrayObject(candidate) {
   return (
-    candidate !== null &&
-    typeof candidate === "object" &&
-    !Array.isArray(candidate)
+    candidate !== null && typeof candidate === "object" && !Array.isArray(candidate)
   );
 }

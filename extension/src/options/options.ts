@@ -1,9 +1,6 @@
 // 1. browser／provider境界はruntimeで検証する。詳細はADR 0002を参照。
 // @ts-nocheck
-import {
-  EVALUATION_AXIS_IDS,
-  EvaluationAxes,
-} from "../domain/evaluation-axes.js";
+import { EVALUATION_AXIS_IDS, EvaluationAxes } from "../domain/evaluation-axes.js";
 
 const EVALUATION_AXIS_COPY_BY_ID = {
   usefulness: ["推定有用度", "今回の検索にどれくらい役立つか"],
@@ -35,8 +32,7 @@ for (const evaluationAxisId of EVALUATION_AXIS_IDS) {
   const axisCopyElement = document.createElement("span");
   axisCopyElement.textContent = EVALUATION_AXIS_COPY_BY_ID[evaluationAxisId][0];
   const axisDescriptionElement = document.createElement("small");
-  axisDescriptionElement.textContent =
-    EVALUATION_AXIS_COPY_BY_ID[evaluationAxisId][1];
+  axisDescriptionElement.textContent = EVALUATION_AXIS_COPY_BY_ID[evaluationAxisId][1];
   axisCopyElement.append(axisDescriptionElement);
   axisToggleLabelElement.append(axisCheckboxElement, axisCopyElement);
   evaluationAxesContainer.append(axisToggleLabelElement);
@@ -45,34 +41,31 @@ for (const evaluationAxisId of EVALUATION_AXIS_IDS) {
 await loadStoredSettingsIntoForm();
 
 // 3. tokenは再表示せず、設定変更時は古い評価cacheを破棄する。
-settingsFormElement.addEventListener(
-  "submit",
-  async (settingsFormSubmitEvent) => {
-    settingsFormSubmitEvent.preventDefault();
-    const enabledEvaluationAxisIds = readSelectedEvaluationAxisIds();
-    try {
-      EvaluationAxes.fromUntrustedIds(enabledEvaluationAxisIds);
-    } catch {
-      showSaveNotice("評価軸を1つ以上オンにしてください。", true);
-      return;
-    }
-    const storedSecretData = await chrome.storage.local.get("secrets");
-    const enteredApiKey = apiKeyInputElement.value.trim();
-    await chrome.storage.local.set({
-      settings: {
-        enabled: document.querySelector("#enabled").checked,
-        enabledAxes: enabledEvaluationAxisIds,
-      },
-      secrets: enteredApiKey
-        ? { jevApiKey: enteredApiKey }
-        : (storedSecretData.secrets ?? {}),
-      evaluationCache: {},
-    });
-    apiKeyInputElement.value = "";
-    await loadStoredSettingsIntoForm();
-    showSaveNotice("設定を保存しました。次の検索結果から反映されます。");
-  },
-);
+settingsFormElement.addEventListener("submit", async (settingsFormSubmitEvent) => {
+  settingsFormSubmitEvent.preventDefault();
+  const enabledEvaluationAxisIds = readSelectedEvaluationAxisIds();
+  try {
+    EvaluationAxes.fromUntrustedIds(enabledEvaluationAxisIds);
+  } catch {
+    showSaveNotice("評価軸を1つ以上オンにしてください。", true);
+    return;
+  }
+  const storedSecretData = await chrome.storage.local.get("secrets");
+  const enteredApiKey = apiKeyInputElement.value.trim();
+  await chrome.storage.local.set({
+    settings: {
+      enabled: document.querySelector("#enabled").checked,
+      enabledAxes: enabledEvaluationAxisIds,
+    },
+    secrets: enteredApiKey
+      ? { jevApiKey: enteredApiKey }
+      : (storedSecretData.secrets ?? {}),
+    evaluationCache: {},
+  });
+  apiKeyInputElement.value = "";
+  await loadStoredSettingsIntoForm();
+  showSaveNotice("設定を保存しました。次の検索結果から反映されます。");
+});
 
 document.querySelector("#delete-token").addEventListener("click", async () => {
   await chrome.storage.local.set({ secrets: {}, evaluationCache: {} });
@@ -82,16 +75,11 @@ document.querySelector("#delete-token").addEventListener("click", async () => {
 });
 
 async function loadStoredSettingsIntoForm() {
-  const { settings, secrets } = await chrome.storage.local.get([
-    "settings",
-    "secrets",
-  ]);
+  const { settings, secrets } = await chrome.storage.local.get(["settings", "secrets"]);
   const enabledEvaluationAxisIds =
     settings?.enabledAxes ?? EvaluationAxes.learningPreset().enabledAxisIds;
   document.querySelector("#enabled").checked = settings?.enabled ?? true;
-  for (const axisCheckboxElement of document.querySelectorAll(
-    'input[name="axis"]',
-  )) {
+  for (const axisCheckboxElement of document.querySelectorAll('input[name="axis"]')) {
     axisCheckboxElement.checked = enabledEvaluationAxisIds.includes(
       axisCheckboxElement.value,
     );
